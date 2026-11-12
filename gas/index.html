@@ -168,9 +168,19 @@
             <label class="block text-[11px] font-black text-[#4a2810] mb-1">場所・住所（任意）</label>
             <input type="text" id="editAddress" class="w-full border-2 border-[#d9be9b] rounded-xl px-3 py-2 text-sm bg-white">
           </div>
-          <div>
-            <label class="block text-[11px] font-black text-[#4a2810] mb-1">紹介URL（任意）</label>
-            <input type="text" id="editUrl" class="w-full border-2 border-[#d9be9b] rounded-xl px-3 py-2 text-sm bg-white">
+          <div class="bg-[#fff9ef] p-2.5 rounded-2xl border-2 border-[#d9be9b]">
+            <label class="block text-[11px] font-black text-[#8a481c] mb-1">🔗 紹介URL・Googleマップ共有リンク（任意）</label>
+            <div class="flex gap-1.5">
+              <input type="text" id="editUrl" placeholder="例: https://share.google/..." class="flex-1 border-2 border-[#d9be9b] rounded-xl px-2.5 py-1.5 text-xs bg-white">
+              <button type="button" id="editResolveBtn" onclick="onEditUrlChange()" class="px-2.5 py-1.5 bg-[#d78839] text-white rounded-xl text-xs font-black cursor-pointer whitespace-nowrap">調べる</button>
+            </div>
+            <div id="editResolvedAddrPreview" class="hidden mt-2 p-2 bg-[#f4ebe1] border-2 border-[#8a481c] rounded-xl flex items-start gap-2">
+              <span class="text-base leading-none">📍</span>
+              <div class="flex-1 min-w-0">
+                <div class="text-[10px] font-black text-[#5c3010]">自動取得した住所:</div>
+                <div id="editResolvedAddrText" class="text-xs font-black text-[#8a481c] break-words"></div>
+              </div>
+            </div>
           </div>
           <div class="pt-2 flex gap-2">
             <button type="button" onclick="closeEditModal()" class="flex-1 py-2.5 bg-[#e8d8c3] rounded-full text-xs font-black text-[#7a583e] cursor-pointer">やめる</button>
@@ -599,6 +609,50 @@
       });
     }
 
+    let editResolvedLat = null;
+    let editResolvedLng = null;
+
+    function onEditUrlChange() {
+      const url = document.getElementById('editUrl').value.trim();
+      if (!url) { showToast('URLを入力してね'); return; }
+      const btn = document.getElementById('editResolveBtn');
+      btn.disabled = true;
+      btn.textContent = '…';
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(res => {
+          btn.disabled = false;
+          btn.textContent = '調べる';
+          if (res && res.success) {
+            const gotName = res.name && res.name !== '行き先スポット';
+            if (gotName) document.getElementById('editName').value = res.name;
+            if (res.address) {
+              document.getElementById('editAddress').value = res.address;
+              document.getElementById('editResolvedAddrPreview').classList.remove('hidden');
+              document.getElementById('editResolvedAddrText').innerText = res.address;
+            }
+            if (res.lat && res.lng) {
+              editResolvedLat = res.lat;
+              editResolvedLng = res.lng;
+              if (map) map.flyTo([res.lat, res.lng], 14);
+            }
+            showToast((gotName || res.address || (res.lat && res.lng)) ? '住所を取得したよ！' : 'リンクからは取得できませんでした');
+          } else {
+            showToast((res && res.error) || '取得できませんでした');
+          }
+        }).withFailureHandler(err => {
+          btn.disabled = false;
+          btn.textContent = '調べる';
+          console.error(err);
+          showToast('調べるのに失敗しました');
+        }).resolveShareUrl(url);
+      } else {
+        btn.disabled = false;
+        btn.textContent = '調べる';
+        showToast('プレビューでは調べられません');
+      }
+    }
+
     function selectEditPoster(btn) {
       editSelectedPoster = btn.getAttribute('data-poster');
       paintEditPosterButtons();
@@ -614,6 +668,9 @@
       document.getElementById('editUrl').value = editingItem.url || '';
       editSelectedPoster = posterLabel(editingItem.poster) || '👨 かずや';
       paintEditPosterButtons();
+      editResolvedLat = null;
+      editResolvedLng = null;
+      document.getElementById('editResolvedAddrPreview').classList.add('hidden');
       document.getElementById('editModal').classList.remove('hidden');
     }
 
@@ -631,7 +688,9 @@
         category: document.getElementById('editCategory').value,
         address: document.getElementById('editAddress').value.trim(),
         url: document.getElementById('editUrl').value.trim(),
-        poster: editSelectedPoster
+        poster: editSelectedPoster,
+        latitude: editResolvedLat,
+        longitude: editResolvedLng
       };
       const btn = document.getElementById('editSubmitBtn');
       btn.disabled = true;
@@ -814,7 +873,8 @@
           btn.disabled = false;
           btn.textContent = '調べる';
           if (res && res.success) {
-            if (res.name) document.getElementById('formName').value = res.name;
+            const gotName = res.name && res.name !== '行き先スポット';
+            if (gotName) document.getElementById('formName').value = res.name;
             if (res.address) {
               document.getElementById('formAddress').value = res.address;
               document.getElementById('resolvedAddrPreview').classList.remove('hidden');
@@ -825,7 +885,7 @@
               resolvedLng = res.lng;
               if (map) map.flyTo([res.lat, res.lng], 14);
             }
-            showToast('住所を取得したよ！');
+            showToast((gotName || res.address || (res.lat && res.lng)) ? '住所を取得したよ！' : 'リンクからは取得できませんでした');
           } else {
             showToast((res && res.error) || '取得できませんでした');
           }

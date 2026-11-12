@@ -67,6 +67,15 @@ function doGet(e) {
 }
 
 /**
+ * 権限承認用（エディタから一度だけ実行する）
+ * UrlFetchApp（調べる・アルバム表紙取得）に必要な権限の承認ポップアップを出すための関数。
+ */
+function authorizeUrlFetch() {
+  const res = UrlFetchApp.fetch('https://example.com', { muteHttpExceptions: true });
+  Logger.log('status: ' + res.getResponseCode());
+}
+
+/**
  * 共有URL（share.google や Googleマップ短縮URL等）を解決して店名と住所を取得する
  */
 function resolveShareUrl(rawUrl) {
@@ -106,40 +115,84 @@ function resolveShareUrl(rawUrl) {
       };
     }
 
-    const response = UrlFetchApp.fetch(url, {
-      followRedirects: true,
-      muteHttpExceptions: true,
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'ja,en;q=0.9'
-      }
-    });
-
-    const body = response.getContentText();
+    // リダイレクトを手でたどり、Location URL から店名・座標の手がかりを集める。
+    // （自動でたどると最終ページ＝検索ページがボット遮断され、本文からは何も取れない）
     let name = '';
-    const qMatch = body.match(/\/search\?q=([^&"'>\s]+)/) || body.match(/[?&]q=([^&"'>\s]+)/);
-    if (qMatch) {
-      name = decodeURIComponent(qMatch[1].replace(/\+/g, ' ')).trim();
+    let foundLat = null;
+    let foundLng = null;
+    let current = url;
+    const fetchHeaders = {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept-Language': 'ja,en;q=0.9'
+    };
+    for (let hop = 0; hop < 6; hop++) {
+      const res = UrlFetchApp.fetch(current, {
+        followRedirects: false,
+        muteHttpExceptions: true,
+        headers: fetchHeaders
+      });
+      const code = res.getResponseCode();
+      const loc = res.getHeaders()['Location'] || res.getHeaders()['location'] || '';
+      if (code >= 300 && code < 400 && loc) {
+        const clue = extractClueFromUrl_(loc);
+        if (!name && clue.name) name = clue.name;
+        if (foundLat === null && clue.lat !== null) { foundLat = clue.lat; foundLng = clue.lng; }
+        current = loc;
+        if (name) break;
+        continue;
+      }
+      break;
     }
 
-    // Google Maps Geocoder で検索
+    // 店名が取れたら Geocoder で住所・座標を引く（座標がURLから取れた場合はそれを優先）
     let geo = null;
-    if (name) {
+    if (name && foundLat === null) {
       geo = geocodeAddress_(name, name);
     }
 
     return {
       success: true,
       name: name || '行き先スポット',
-      address: geo && geo.address ? geo.address : (name ? `${name} 付近` : ''),
-      lat: geo ? geo.lat : null,
-      lng: geo ? geo.lng : null,
+      address: geo && geo.address ? geo.address : '',
+      lat: foundLat !== null ? foundLat : (geo ? geo.lat : null),
+      lng: foundLng !== null ? foundLng : (geo ? geo.lng : null),
       url: url
     };
   } catch (err) {
     return { success: false, error: err.toString() };
   }
+}
+
+/**
+ * URL文字列から店名・座標の手がかりを抽出する（リダイレクト先URL用）
+ */
+function extractClueFromUrl_(u) {
+  const out = { name: '', lat: null, lng: null };
+  if (!u) return out;
+  let s = String(u);
+  try { s = decodeURIComponent(s); } catch (e) { /* そのまま使う */ }
+
+  const placeMatch = s.match(/\/maps\/place\/([^\/@?]+)/);
+  if (placeMatch) {
+    out.name = placeMatch[1].replace(/\+/g, ' ').trim();
+  }
+  if (!out.name && (s.indexOf('/search') >= 0 || s.indexOf('maps') >= 0)) {
+    const qm = s.match(/[?&]q=([^&]+)/) || s.match(/[?&]query=([^&]+)/);
+    if (qm) {
+      const cand = qm[1].replace(/\+/g, ' ').trim();
+      // 共有トークン等のASCIIだけのIDは店名として採用しない
+      if (/[^\x00-\x7F]/.test(cand) || cand.indexOf(' ') >= 0) out.name = cand;
+    }
+  }
+  const atMatch = s.match(/@(-?\d{2,3}\.\d+),(-?\d{2,3}\.\d+)/);
+  const bangMatch = s.match(/!3d(-?\d{2,3}\.\d+)!4d(-?\d{2,3}\.\d+)/);
+  const cm = bangMatch || atMatch;
+  if (cm) {
+    out.lat = parseFloat(cm[1]);
+    out.lng = parseFloat(cm[2]);
+  }
+  return out;
 }
 
 /**
@@ -359,13 +412,16 @@ function updateDestination(id, formData) {
       if (urlCol >= 0) sheet.getRange(r + 1, urlCol + 1).setValue(formData.url || '');
 
       let lat = null, lng = null;
-      if (formData.address) {
+      if (formData.latitude && formData.longitude) {
+        // 「調べる」で解決済みの座標があればそれを優先する
+        lat = formData.latitude; lng = formData.longitude;
+      } else if (formData.address) {
         const geo = geocodeAddress_(formData.address, formData.name || data[r][nameCol]);
-        if (geo) {
-          lat = geo.lat; lng = geo.lng;
-          if (latCol >= 0) sheet.getRange(r + 1, latCol + 1).setValue(lat);
-          if (lngCol >= 0) sheet.getRange(r + 1, lngCol + 1).setValue(lng);
-        }
+        if (geo) { lat = geo.lat; lng = geo.lng; }
+      }
+      if (lat !== null && lng !== null) {
+        if (latCol >= 0) sheet.getRange(r + 1, latCol + 1).setValue(lat);
+        if (lngCol >= 0) sheet.getRange(r + 1, lngCol + 1).setValue(lng);
       }
       return { success: true, lat: lat, lng: lng };
     }
