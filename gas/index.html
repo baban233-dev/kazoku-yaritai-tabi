@@ -84,6 +84,15 @@
           <button onclick="closeModal()" class="text-xl font-black text-[#7a583e] cursor-pointer">&times;</button>
         </div>
         <form onsubmit="handleFormSubmit(event)" class="p-4 overflow-y-auto flex flex-col gap-3">
+          <div>
+            <label class="block text-[11px] font-black text-[#4a2810] mb-1">誰のやりたいこと？ <span class="text-[#e0523d] text-[9px]">※必須</span></label>
+            <div class="grid grid-cols-4 gap-1.5" id="posterSelector">
+              <button type="button" data-poster="👨 お父さん" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#ffe3b3] border-[#c96e1b] text-[#8a3c00] ring-1 ring-[#c96e1b]">👨 お父さん</button>
+              <button type="button" data-poster="👩 お母さん" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👩 お母さん</button>
+              <button type="button" data-poster="👦 ゆうた" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👦 ゆうた</button>
+              <button type="button" data-poster="👧 あい" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👧 あい</button>
+            </div>
+          </div>
           <div class="bg-[#fff9ef] p-2.5 rounded-2xl border-2 border-[#d9be9b]">
             <label class="block text-[11px] font-black text-[#8a481c] mb-1">🔗 紹介URL・Googleマップ共有リンク（任意）</label>
             <div class="flex gap-1.5">
@@ -141,6 +150,10 @@
           <div class="flex">
             <span class="w-20 font-black text-[#7a583e]">場所・住所</span>
             <span id="detailAddress" class="font-extrabold text-[#4a2810]"></span>
+          </div>
+          <div class="flex">
+            <span class="w-20 font-black text-[#7a583e]">投稿者</span>
+            <span id="detailPoster" class="font-extrabold text-[#4a2810]"></span>
           </div>
           <div id="detailUrlRow" class="hidden flex items-center">
             <span class="w-20 font-black text-[#7a583e]">紹介リンク</span>
@@ -216,6 +229,33 @@
     let destinations = [];
     let currentFilter = 'all';
     let currentDetailItem = null;
+    let selectedPoster = '👨 お父さん';
+
+    // 投稿者ラベル（旧データの絵文字なし表記にもアイコンを付けて表示）
+    function posterLabel(p) {
+      if (!p) return '';
+      const icons = { 'お父さん': '👨 お父さん', 'お母さん': '👩 お母さん', 'ゆうた': '👦 ゆうた', 'あい': '👧 あい', 'けんた': '👦 けんた' };
+      return icons[p] || p;
+    }
+
+    // 日付を M/D 形式に整える（サーバーから Date のまま届く場合の対策）
+    function shortDate(d) {
+      if (!d) return '';
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return '';
+      return (dt.getMonth() + 1) + '/' + dt.getDate();
+    }
+
+    // 投稿者セレクターの選択切り替え
+    function selectPoster(btn) {
+      selectedPoster = btn.getAttribute('data-poster');
+      document.querySelectorAll('.poster-btn').forEach(b => {
+        const active = b === btn;
+        b.className = 'poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center ' +
+          (active ? 'bg-[#ffe3b3] border-[#c96e1b] text-[#8a3c00] ring-1 ring-[#c96e1b]'
+                  : 'bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]');
+      });
+    }
     let currentVisitedPhotoUrl = '';
     let resolvedLat = null;
     let resolvedLng = null;
@@ -409,6 +449,10 @@
             <div class="text-xs font-black text-[#4a2810] truncate">${item.name}</div>
             <div class="text-[9px] text-[#7a583e] truncate mt-0.5">📍 ${item.address || '住所未設定'}</div>
             ${item.latitude ? '<div class="text-[9px] text-[#d78839] font-black mt-0.5">📍 ピンあり</div>' : ''}
+            <div class="flex justify-between items-center text-[9px] font-black text-[#7a583e] mt-2 pt-1 border-t border-[#f0e0cc]">
+              <span class="truncate max-w-[65px]">${posterLabel(item.poster)}</span>
+              <span>${shortDate(item.visitedDate || item.registeredAt)}</span>
+            </div>
           </div>
         `;
         container.appendChild(card);
@@ -437,6 +481,7 @@
       statusEl.innerText = isVisited ? `行った！🍓 (${item.visitedDate || ''})` : '行きたい！🍞';
       statusEl.className = 'font-black ' + (isVisited ? 'text-[#2e7d32]' : 'text-[#d78839]');
       document.getElementById('detailAddress').innerText = item.address || '未設定';
+      document.getElementById('detailPoster').innerText = posterLabel(item.poster);
 
       const urlRow = document.getElementById('detailUrlRow');
       if (item.url) {
@@ -641,7 +686,7 @@
         address,
         url,
         category,
-        poster: 'お父さん',
+        poster: selectedPoster,
         desire: 5,
         latitude: resolvedLat,
         longitude: resolvedLng
@@ -674,7 +719,7 @@
           address: address,
           url: url,
           category: category,
-          poster: 'お父さん',
+          poster: selectedPoster,
           desire: 5,
           status: '行きたい'
         });
