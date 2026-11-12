@@ -220,8 +220,24 @@
     let resolvedLat = null;
     let resolvedLng = null;
 
-    const breadIcon = L.icon({ iconUrl: PIN_BREAD, iconSize: [38, 44], iconAnchor: [19, 43], popupAnchor: [0, -42] });
-    const visitedIcon = L.icon({ iconUrl: PIN_VISITED, iconSize: [38, 44], iconAnchor: [19, 43], popupAnchor: [0, -42] });
+    // アイコンは Leaflet 読込後に遅延生成する（L未定義でスクリプト全体が止まるのを防ぐ）
+    let breadIcon = null;
+    let visitedIcon = null;
+    function ensureIcons() {
+      if (!window.L) return false;
+      if (!breadIcon) {
+        try {
+          breadIcon = L.icon({ iconUrl: PIN_BREAD, iconSize: [38, 44], iconAnchor: [19, 43], popupAnchor: [0, -42] });
+          visitedIcon = L.icon({ iconUrl: PIN_VISITED, iconSize: [38, 44], iconAnchor: [19, 43], popupAnchor: [0, -42] });
+        } catch (e) {
+          console.error(e);
+          breadIcon = null;
+          visitedIcon = null;
+          return false;
+        }
+      }
+      return true;
+    }
 
     function showToast(msg) {
       const el = document.getElementById('toast');
@@ -230,18 +246,68 @@
       setTimeout(() => el.classList.add('hidden'), 2800);
     }
 
-    window.onload = function() {
-      map = L.map('map', { zoomControl: false, attributionControl: false }).setView([35.79, 139.30], 12);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+    function showMapMessage() {
+      const el = document.getElementById('map');
+      if (el && !map) {
+        el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;min-height:120px;color:#7a583e;font-size:11px;font-weight:800;text-align:center;padding:8px;">地図を表示できませんでした<br>（通信環境をご確認ください）</div>';
+      }
+    }
+
+    function initMap() {
+      if (map) return true;
+      if (!window.L) return false;
+      try {
+        map = L.map('map', { zoomControl: false, attributionControl: false }).setView([35.79, 139.30], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+        renderMarkers();
+        return true;
+      } catch (e) {
+        console.error(e);
+        map = null;
+        return false;
+      }
+    }
+
+    function initMapWithFallback() {
+      if (initMap()) return;
+      // 予備の配信元（jsDelivr）から Leaflet を読み直す
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(css);
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+      s.onload = function() { if (!initMap()) showMapMessage(); };
+      s.onerror = function() { showMapMessage(); };
+      document.head.appendChild(s);
+    }
+
+    let appStarted = false;
+    function startApp() {
+      if (appStarted) return;
+      appStarted = true;
+      // 一覧の読み込みは地図を待たずに即座に開始する
+      loadList();
+      initMapWithFallback();
 
       // 初期日付設定
       const dateEl = document.getElementById('visitedDate');
       if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
+    }
+    // 起動トリガーは、このスクリプトの末尾（全ての宣言の後）に置く。
+    // ここで即時実行すると、後方で宣言した let 変数（listLoaded 等）に
+    // 初期化前に触れてエラーになるため。
 
-      loadList();
-    };
-
+    let listLoaded = false;
     function loadList() {
+      listLoaded = false;
+      // 万一サーバー応答が戻らなくても「読み込み中」のままにしない
+      setTimeout(() => {
+        if (!listLoaded) {
+          showToast('読み込みに時間がかかっています');
+          renderList([]);
+        }
+      }, 15000);
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run.withSuccessHandler(renderList).withFailureHandler(err => {
           console.error(err);
@@ -252,7 +318,7 @@
         renderList([
           { id: '1', name: 'らーめん ニューカッパ', category: '店', address: '東京都羽村市小作台1丁目11-6 NTKビル1F', latitude: 35.7763, longitude: 139.3019, desire: 5, poster: 'お父さん', status: '行きたい' },
           { id: '2', name: '担々麺杉山', category: '店', address: '東京都青梅市今寺4丁目5-24', latitude: 35.7972, longitude: 139.3005, desire: 5, poster: 'お父さん', status: '行きたい' },
-          { id: '3', name: 'ゆうえんち（あきる野）', category: '場所', address: '東京都あきる野市', latitude: 35.82, longitude: 139.28, desire: 4, poster: 'けんた', status: '行った', visitedDate: '2026-11-10', visitedMemo: '大観覧車が最高でした！🍦', albumUrl: 'https://photos.app.goo.gl/sample', photoUrl: 'https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9?auto=format&fit=crop&w=800&q=80' }
+          { id: '3', name: 'ゆうえんち（あきる野）', category: '場所', address: '東京都あきる野市', latitude: 35.82, longitude: 139.28, desire: 4, poster: 'けんた', status: '行った', visitedDate: '2026-11-10', visitedMemo: '大観覧車が最高でした！🍦', albumUrl: 'https://photos.app.goo.gl/sample', photoUrl: '' }
         ]);
       }
     }
@@ -274,20 +340,22 @@
     }
 
     function renderList(list) {
+      listLoaded = true;
       destinations = list || [];
       renderMarkers();
       renderCards();
     }
 
     function renderMarkers() {
+      if (!map || !window.L) return;
       Object.values(markers).forEach(m => map.removeLayer(m));
       markers = {};
 
       destinations.forEach(item => {
         if (item.latitude && item.longitude) {
           const isVisited = (item.status === '行った');
-          const icon = isVisited ? visitedIcon : breadIcon;
-          const m = L.marker([item.latitude, item.longitude], { icon: icon }).addTo(map).bindPopup(
+          const markerOpts = ensureIcons() ? { icon: isVisited ? visitedIcon : breadIcon } : {};
+          const m = L.marker([item.latitude, item.longitude], markerOpts).addTo(map).bindPopup(
             '<div style="font-weight:900;color:#4a2810;">' + item.name + '</div>' +
             '<div style="color:' + (isVisited ? '#2e7d32' : '#d78839') + ';font-weight:800;font-size:11px;">' + (isVisited ? '行った！🍓' : '行きたい！🍞') + '</div>' +
             (item.photoUrl ? '<div style="margin:4px 0;width:100%;height:60px;overflow:hidden;border-radius:6px;border:1px solid #7ab877;"><img src="' + item.photoUrl + '" style="width:100%;height:100%;object-fit:cover;"></div>' : '') +
@@ -465,7 +533,7 @@
       } else {
         btn.disabled = false;
         btn.innerText = '読込';
-        currentVisitedPhotoUrl = 'https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9?auto=format&fit=crop&w=800&q=80';
+        currentVisitedPhotoUrl = '';
         document.getElementById('albumPreviewImg').src = currentVisitedPhotoUrl;
         document.getElementById('albumPreviewBox').classList.remove('hidden');
         showToast('写真を読み込みました！（プレビュー）');
@@ -529,7 +597,7 @@
             if (res.lat && res.lng) {
               resolvedLat = res.lat;
               resolvedLng = res.lng;
-              map.flyTo([res.lat, res.lng], 14);
+              if (map) map.flyTo([res.lat, res.lng], 14);
             }
             showToast('住所を取得したよ！');
           } else {
@@ -551,7 +619,7 @@
           document.getElementById('resolvedAddrText').innerText = '東京都青梅市今寺4丁目5-24';
           resolvedLat = 35.7972;
           resolvedLng = 139.3005;
-          map.flyTo([35.7972, 139.3005], 14);
+          if (map) map.flyTo([35.7972, 139.3005], 14);
           showToast('住所を取得したよ！（ローカル）');
         } else {
           showToast('ローカルでは一部URLのみ対応');
@@ -590,7 +658,7 @@
           closeModal();
           showToast('登録したよ！');
           loadList();
-          if (res && res.lat && res.lng) map.flyTo([res.lat, res.lng], 14);
+          if (map && res && res.lat && res.lng) map.flyTo([res.lat, res.lng], 14);
         }).withFailureHandler(err => {
           btn.disabled = false;
           btn.textContent = 'ほっかほっカーで登録';
@@ -614,6 +682,16 @@
         closeModal();
         showToast('登録したよ！（プレビュー）');
       }
+    }
+
+    // 起動トリガー：window.onload には頼らない（大きなヒーロー画像などの読み込みが
+    // 終わるまで load イベントが発火せず、一覧が「読み込み中」のままになる事象への対策）。
+    // このスクリプトは body 末尾にあるため DOM は構築済み。即時に開始し、
+    // 保険として DOMContentLoaded でも呼ぶ（二重起動は appStarted で防止）。
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startApp);
+    } else {
+      startApp();
     }
   </script>
 </body>
