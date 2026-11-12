@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>家族のやりたいことリスト｜パンどろぼう×ほっかほっカーの旅</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,12 +14,12 @@
     body { font-family: 'M PLUS Rounded 1c', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .leaflet-popup-content { font-family: 'M PLUS Rounded 1c', sans-serif; }
   </style>
 </head>
 <body class="bg-[#f3e9db] text-[#4a2810] flex justify-center min-h-screen">
   <div class="w-full max-w-[430px] min-h-screen bg-[#fbf6ec] shadow-2xl flex flex-col relative border-x-[3px] border-[#dfcfbd]">
-    
-    <!-- ヘッダー -->
+
     <header class="bg-gradient-to-b from-[#f7e6cf] to-[#ebd4b7] border-b-[3px] border-[#8a481c] px-4 py-3 flex items-center justify-between shadow-xs">
       <div class="flex items-center gap-2">
         <span class="text-2xl">🍞</span>
@@ -28,38 +28,36 @@
           <p class="text-[10px] font-extrabold text-[#964d1f]">パンどろぼう × ほっかほっカーの旅</p>
         </div>
       </div>
-      <button onclick="openModal()" class="w-9 h-9 rounded-full bg-[#d78839] hover:bg-[#b86518] text-white flex items-center justify-center font-black shadow-md border-2 border-[#8a481c] cursor-pointer">
-        ＋
-      </button>
+      <button onclick="openModal()" class="w-9 h-9 rounded-full bg-[#d78839] hover:bg-[#b86518] text-white flex items-center justify-center font-black shadow-md border-2 border-[#8a481c] cursor-pointer">＋</button>
     </header>
 
-    <!-- メイン -->
     <main class="flex-1 overflow-y-auto pb-24 p-3 space-y-3">
-      <!-- ヒーロー（1024×590で切り出し） -->
-      <div class="w-full overflow-hidden rounded-2xl border-[3px] border-[#8a481c] shadow-md bg-[#fff7ea] relative" style="aspect-ratio: 1024 / 590;">
-        <img src="https://raw.githubusercontent.com/baban233-dev/kazoku-yaritai-tabi/main/assets/hokkahokka-car.jpg" alt="ほっかほっカー" class="w-full h-full object-cover object-top block" onerror="this.style.display='none'">
+      <div class="w-full overflow-hidden rounded-2xl border-[3px] border-[#8a481c] shadow-md bg-[#c3e2f5] relative" style="aspect-ratio: 1024 / 590;">
+        <img src="https://raw.githubusercontent.com/baban233-dev/kazoku-yaritai-tabi/main/file_000000001d4c81faaac961a36e8f3609.png" alt="ほっかほっカー" class="w-full h-auto block object-top" onerror="this.style.display='none'">
       </div>
 
-      <!-- 地図エリア -->
       <div class="bg-[#fffdf8] p-2 rounded-2xl border-[3px] border-[#8a481c] shadow-md">
         <div class="flex justify-between items-center mb-1.5 px-1">
           <span class="text-xs font-black text-[#8a481c]">📍 いまの地図</span>
-          <span class="text-[10px] font-extrabold text-[#7a583e]">カードをタップで地図ジャンプ</span>
+          <span class="text-[10px] font-extrabold text-[#7a583e]">カードをタップでジャンプ</span>
         </div>
         <div id="map" class="w-full h-56 rounded-xl border-2 border-[#d9be9b]"></div>
+        <div class="flex gap-4 pt-2 px-1 text-[11px] font-extrabold text-[#7a583e]">
+          <span class="inline-flex items-center gap-1"><img src="https://raw.githubusercontent.com/baban233-dev/kazoku-yaritai-tabi/main/pin-bread.svg" alt="行きたい" style="height:20px;width:auto;"> 行きたい</span>
+          <span class="inline-flex items-center gap-1"><img src="https://raw.githubusercontent.com/baban233-dev/kazoku-yaritai-tabi/main/pin-bread-visited.svg" alt="行った" style="height:20px;width:auto;"> 行った</span>
+        </div>
       </div>
 
-      <!-- リスト -->
       <div>
         <div class="flex justify-between items-center mb-2 px-1">
           <div class="text-sm font-black text-[#5c3010]">🚩 行き先リスト</div>
+          <div id="counter" class="text-[10px] font-extrabold text-[#7a583e]"></div>
         </div>
         <div id="card-list" class="flex gap-2.5 overflow-x-auto py-1 px-0.5 no-scrollbar min-h-[125px]">
           <div class="text-xs text-[#7a583e] py-6 w-full text-center">読み込み中...🍞</div>
         </div>
       </div>
 
-      <!-- 投稿ボタン -->
       <div class="pt-2">
         <button onclick="openModal()" class="w-full py-3.5 bg-gradient-to-b from-[#f78d3f] to-[#db5b1a] text-white font-black text-sm rounded-full shadow-[0_4px_0_#702a06] border-2 border-[#8e380b] flex items-center justify-center gap-2 cursor-pointer">
           <span>＋ 新しく投稿する</span>
@@ -67,7 +65,6 @@
       </div>
     </main>
 
-    <!-- 投稿モーダル -->
     <div id="postModal" class="hidden fixed inset-0 bg-[#4a2810]/60 backdrop-blur-xs flex items-center justify-center p-4 z-[3000]">
       <div class="w-full max-w-[390px] bg-[#fffdf9] border-[3.5px] border-[#8a481c] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         <div class="bg-[#f7e6cf] border-b-2 border-[#d9be9b] px-4 py-3 flex justify-between items-center">
@@ -75,20 +72,17 @@
           <button onclick="closeModal()" class="text-xl font-black text-[#7a583e] cursor-pointer">&times;</button>
         </div>
         <form onsubmit="handleFormSubmit(event)" class="p-4 overflow-y-auto flex flex-col gap-3">
-          <!-- 共有URL -->
           <div class="bg-[#fff9ef] p-2.5 rounded-2xl border-2 border-[#d9be9b]">
-            <label class="block text-[11px] font-black text-[#8a481c] mb-1">
-              🔗 紹介URL・Googleマップ共有リンク（任意）
-            </label>
+            <label class="block text-[11px] font-black text-[#8a481c] mb-1">🔗 紹介URL・Googleマップ共有リンク（任意）</label>
             <div class="flex gap-1.5">
-              <input type="text" id="formUrl" placeholder="例: https://share.google/..." onchange="onUrlChange()" class="flex-1 border-2 border-[#d9be9b] rounded-xl px-2.5 py-1.5 text-xs bg-white">
-              <button type="button" onclick="onUrlChange()" class="px-2.5 py-1.5 bg-[#d78839] text-white rounded-xl text-xs font-black cursor-pointer">調べる</button>
+              <input type="text" id="formUrl" placeholder="例: https://share.google/..." class="flex-1 border-2 border-[#d9be9b] rounded-xl px-2.5 py-1.5 text-xs bg-white">
+              <button type="button" id="resolveBtn" onclick="onUrlChange()" class="px-2.5 py-1.5 bg-[#d78839] text-white rounded-xl text-xs font-black cursor-pointer whitespace-nowrap">調べる</button>
             </div>
             <div id="resolvedAddrPreview" class="hidden mt-2 p-2 bg-[#f4ebe1] border-2 border-[#8a481c] rounded-xl flex items-start gap-2">
               <span class="text-base leading-none">📍</span>
               <div class="flex-1 min-w-0">
                 <div class="text-[10px] font-black text-[#5c3010]">自動取得した住所:</div>
-                <div id="resolvedAddrText" class="text-xs font-black text-[#8a481c]"></div>
+                <div id="resolvedAddrText" class="text-xs font-black text-[#8a481c] break-words"></div>
               </div>
             </div>
           </div>
@@ -103,6 +97,15 @@
             <input type="text" id="formAddress" placeholder="例：東京都青梅市今寺4丁目5-24" class="w-full border-2 border-[#d9be9b] rounded-xl px-3 py-2 text-sm bg-white">
           </div>
 
+          <div>
+            <label class="block text-[11px] font-black text-[#4a2810] mb-1">カテゴリ</label>
+            <select id="formCategory" class="w-full border-2 border-[#d9be9b] rounded-xl px-3 py-2 text-sm bg-white">
+              <option value="店">店</option>
+              <option value="場所">場所</option>
+              <option value="やりたいこと">やりたいこと</option>
+            </select>
+          </div>
+
           <div class="pt-2 flex gap-2">
             <button type="button" onclick="closeModal()" class="flex-1 py-2.5 bg-[#e8d8c3] rounded-full text-xs font-black text-[#7a583e]">やめる</button>
             <button type="submit" id="submitBtn" class="flex-[2] py-2.5 bg-[#db5b1a] text-white rounded-full text-xs font-black shadow-md">ほっかほっカーで登録</button>
@@ -110,91 +113,150 @@
         </form>
       </div>
     </div>
+
+    <div id="toast" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[4000] bg-[#4a2810] text-[#fef9f0] px-4 py-2.5 rounded-full font-extrabold text-xs shadow-xl border-2 border-[#d78839]"></div>
   </div>
 
   <script>
+    const PIN_BREAD = 'https://raw.githubusercontent.com/baban233-dev/kazoku-yaritai-tabi/main/pin-bread.svg';
+    const PIN_VISITED = 'https://raw.githubusercontent.com/baban233-dev/kazoku-yaritai-tabi/main/pin-bread-visited.svg';
+
     let map;
     let markers = {};
     let destinations = [];
+    let resolvedLat = null;
+    let resolvedLng = null;
+
+    const breadIcon = L.icon({ iconUrl: PIN_BREAD, iconSize: [38, 44], iconAnchor: [19, 43], popupAnchor: [0, -42] });
+    const visitedIcon = L.icon({ iconUrl: PIN_VISITED, iconSize: [38, 44], iconAnchor: [19, 43], popupAnchor: [0, -42] });
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = '🍞 ' + msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 2800);
+    }
 
     window.onload = function() {
-      map = L.map('map', { zoomControl: false, attributionControl: false }).setView([35.7972, 139.3005], 13);
+      map = L.map('map', { zoomControl: false, attributionControl: false }).setView([35.79, 139.30], 12);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+      loadList();
+    };
 
-      // GASの google.script.run またはダミーデータ
+    function loadList() {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(renderList).getDestinationList();
+        google.script.run.withSuccessHandler(renderList).withFailureHandler(err => { console.error(err); showToast('読み込みに失敗しました'); renderList([]); }).getDestinationList();
       } else {
         renderList([
           { id: '1', name: 'らーめん ニューカッパ', category: '店', address: '東京都羽村市小作台1丁目11-6 NTKビル1F', latitude: 35.7763, longitude: 139.3019, desire: 5, poster: 'お父さん', status: '行きたい' },
           { id: '2', name: '担々麺杉山', category: '店', address: '東京都青梅市今寺4丁目5-24', latitude: 35.7972, longitude: 139.3005, desire: 5, poster: 'お父さん', status: '行きたい' }
         ]);
       }
-    };
+    }
 
     function renderList(list) {
       destinations = list || [];
       const container = document.getElementById('card-list');
       container.innerHTML = '';
-
       Object.values(markers).forEach(m => map.removeLayer(m));
       markers = {};
-
+      let want = 0, visited = 0;
+      if (destinations.length === 0) {
+        container.innerHTML = '<div class="text-xs text-[#7a583e] py-6 w-full text-center">まだ登録がありません🍞</div>';
+      }
       destinations.forEach(item => {
+        const isVisited = (item.status === '行った');
+        if (isVisited) visited++; else want++;
         if (item.latitude && item.longitude) {
-          const m = L.marker([item.latitude, item.longitude]).addTo(map).bindPopup('<b>' + item.name + '</b><br>' + (item.address || ''));
+          const icon = isVisited ? visitedIcon : breadIcon;
+          const m = L.marker([item.latitude, item.longitude], { icon: icon }).addTo(map).bindPopup(
+            '<div style="font-weight:900;color:#4a2810;">' + item.name + '</div>' +
+            '<div style="color:' + (isVisited ? '#2e7d32' : '#d78839') + ';font-weight:800;font-size:11px;">' + (isVisited ? '行った！🍓' : '行きたい！🍞') + '</div>' +
+            (item.address ? '<div style="font-size:10px;color:#7a583e;margin-top:2px;">📍 ' + item.address + '</div>' : '')
+          );
           markers[item.id] = m;
         }
-
         const card = document.createElement('div');
         card.className = 'flex-none w-[126px] bg-[#fffdf8] rounded-xl p-2 border-2 border-[#d9be9b] shadow-sm cursor-pointer';
         card.onclick = () => {
           if (item.latitude && item.longitude) {
-            map.flyTo([item.latitude, item.longitude], 15);
-            if (markers[item.id]) markers[item.id].openPopup();
+            map.flyTo([item.latitude, item.longitude], 15, { duration: 0.7 });
+            if (markers[item.id]) setTimeout(() => markers[item.id].openPopup(), 750);
+            showToast('「' + item.name + '」を表示したよ');
           }
         };
-        card.innerHTML = `
-          <div class="text-[9px] font-black text-[#e0523d]">${item.category}</div>
-          <div class="text-xs font-black text-[#4a2810] truncate mt-1">${item.name}</div>
-          <div class="text-[9px] text-[#7a583e] truncate">📍 ${item.address || ''}</div>
-        `;
+        card.innerHTML =
+          '<div class="text-[9px] font-black text-[#e0523d]">' + (item.category || '') + '</div>' +
+          '<div class="text-xs font-black text-[#4a2810] truncate mt-1">' + item.name + '</div>' +
+          '<div class="text-[9px] text-[#7a583e] truncate mt-0.5">📍 ' + (item.address || '住所未設定') + '</div>' +
+          (item.latitude ? '<div class="text-[9px] text-[#d78839] font-black mt-0.5">📍 ピンあり</div>' : '');
         container.appendChild(card);
       });
+      document.getElementById('counter').textContent = '行きたい ' + want + '件 ・ 行った ' + visited + '件';
     }
 
     function openModal() {
       document.getElementById('postModal').classList.remove('hidden');
+      document.getElementById('formUrl').value = '';
+      document.getElementById('formName').value = '';
+      document.getElementById('formAddress').value = '';
+      document.getElementById('resolvedAddrPreview').classList.add('hidden');
+      resolvedLat = null; resolvedLng = null;
     }
-    function closeModal() {
-      document.getElementById('postModal').classList.add('hidden');
-    }
+    function closeModal() { document.getElementById('postModal').classList.add('hidden'); }
 
     function onUrlChange() {
       const url = document.getElementById('formUrl').value.trim();
-      if (!url) return;
-      if (url.includes('mzPtWbHNbOhSgIzVz') || url.includes('担々麺杉山')) {
-        document.getElementById('formName').value = '担々麺杉山';
-        document.getElementById('formAddress').value = '東京都青梅市今寺4丁目5-24';
-        document.getElementById('resolvedAddrPreview').classList.remove('hidden');
-        document.getElementById('resolvedAddrText').innerText = '東京都青梅市今寺4丁目5-24';
+      if (!url) { showToast('URLを入力してね'); return; }
+      const btn = document.getElementById('resolveBtn');
+      btn.disabled = true; btn.textContent = '…';
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(res => {
+          btn.disabled = false; btn.textContent = '調べる';
+          if (res && res.success) {
+            if (res.name) document.getElementById('formName').value = res.name;
+            if (res.address) {
+              document.getElementById('formAddress').value = res.address;
+              document.getElementById('resolvedAddrPreview').classList.remove('hidden');
+              document.getElementById('resolvedAddrText').innerText = res.address;
+            }
+            if (res.lat && res.lng) { resolvedLat = res.lat; resolvedLng = res.lng; map.flyTo([res.lat, res.lng], 14); }
+            showToast('住所を取得したよ！');
+          } else { showToast((res && res.error) || '取得できませんでした'); }
+        }).withFailureHandler(err => { btn.disabled = false; btn.textContent = '調べる'; console.error(err); showToast('調べるのに失敗しました'); }).resolveShareUrl(url);
+      } else {
+        btn.disabled = false; btn.textContent = '調べる';
+        if (url.includes('mzPtWbHNbOhSgIzVz') || url.includes('担々麺')) {
+          document.getElementById('formName').value = '担々麺杉山';
+          document.getElementById('formAddress').value = '東京都青梅市今寺4丁目5-24';
+          document.getElementById('resolvedAddrPreview').classList.remove('hidden');
+          document.getElementById('resolvedAddrText').innerText = '東京都青梅市今寺4丁目5-24';
+          resolvedLat = 35.7972; resolvedLng = 139.3005;
+          map.flyTo([35.7972, 139.3005], 14);
+          showToast('住所を取得したよ！（ローカル）');
+        } else { showToast('ローカルでは一部URLのみ対応'); }
       }
     }
 
     function handleFormSubmit(e) {
       e.preventDefault();
-      const name = document.getElementById('formName').value;
-      const address = document.getElementById('formAddress').value;
-      const url = document.getElementById('formUrl').value;
-      
-      const payload = { name, address, url, poster: 'お父さん', desire: 5, category: '店' };
+      const name = document.getElementById('formName').value.trim();
+      const address = document.getElementById('formAddress').value.trim();
+      const url = document.getElementById('formUrl').value.trim();
+      const category = document.getElementById('formCategory').value;
+      if (!name) { showToast('名前を入力してね'); return; }
+      const payload = { name, address, url, category, poster: 'お父さん', desire: 5, latitude: resolvedLat, longitude: resolvedLng };
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = '登録中…';
       if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(() => {
-          closeModal();
-          google.script.run.withSuccessHandler(renderList).getDestinationList();
-        }).submitDestination(payload);
+        google.script.run.withSuccessHandler(res => {
+          btn.disabled = false; btn.textContent = 'ほっかほっカーで登録';
+          closeModal(); showToast('登録したよ！'); loadList();
+          if (res && res.lat && res.lng) map.flyTo([res.lat, res.lng], 14);
+        }).withFailureHandler(err => { btn.disabled = false; btn.textContent = 'ほっかほっカーで登録'; console.error(err); showToast('登録に失敗しました'); }).submitDestination(payload);
       } else {
-        alert('登録完了！🍞');
+        btn.disabled = false; btn.textContent = 'ほっかほっカーで登録';
+        showToast('ローカルでは登録できません（GASで試してね）');
         closeModal();
       }
     }
