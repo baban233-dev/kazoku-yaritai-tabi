@@ -25,4 +25,20 @@
 - 秘密情報（APIキー、スプレッドシートID等）はリポジトリに絶対書かない（GASのスクリプトプロパティで管理）。
 - コードを変更したら必ずリポジトリのルート直下の `HANDOVER.md` と `PLAN.md` を更新する。
 - ユーザー要望: AI Studioで開発を進めつつ「マメにGitHubにコミット・プッシュ」して同期を維持すること。
-- GASを直接触れないAI（Grokなど）には Termux ＋ `clasp`（`~/kazoku-gas`）での操作を案内する。
+- **Termux環境の保存先ルール（2026-11-12決定）**:
+  - 作業ディレクトリは Termuxホーム直下の **`~/kazoku-yaritai-tabi`** とする（Android共有のダウンロードフォルダはパーミッション・大文字小文字問題があるため使用しない）。
+  - クローン・更新・デプロイ手順:
+    ```bash
+    # 初回クローン（Termuxホーム直下）
+    cd ~
+    git clone https://github.com/baban233-dev/kazoku-yaritai-tabi.git ~/kazoku-yaritai-tabi
+
+    # 移動と最新取得
+    cd ~/kazoku-yaritai-tabi
+    git pull origin main
+
+    # GASへプッシュ・デプロイ
+    clasp push
+    clasp deploy --description "v1.0 本番公開"
+    ```
+
