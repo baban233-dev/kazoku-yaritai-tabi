@@ -1,0 +1,6 @@
+{
+  "name": "家族のやりたいことリスト｜パンどろぼう×ほっかほっカーの旅",
+  "description": "パンどろぼうの世界観で家族の「行きたい！」「やった！」を地図と写真で記録するほっかほっカーの旅アプリ",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

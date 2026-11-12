@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+:root {
+  --bg-cream: #fbf6ec;
+  --bread-crust: #8a481c;
+  --bread-light: #f5be74;
+  --bread-toast: #d78839;
+  --paper-card: #fffdf8;
+  --accent-wood: #964d1f;
+  --text-main: #4a2810;
+  --text-sub: #7a583e;
+  --visited-green: #2e7d32;
+}
+
+body {
+  background-color: #ebdcc9;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  color: var(--text-main);
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
