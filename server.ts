@@ -337,7 +337,53 @@ app.post('/api/resolve-url', async (req, res) => {
       url: finalTargetUrl || urlPart
     });
   } catch (err: any) {
-    return res.status(500).json({ error: err.message || '解決に失敗しました' });
+    console.error('URL resolution error:', err);
+    return res.status(500).json({ error: err.message || 'URLの解決に失敗しました' });
+  }
+});
+
+/**
+ * Googleフォト共有アルバムURLから代表写真の画像URLを取得するAPI（ステップ3・6）
+ */
+app.post('/api/album-cover', async (req, res) => {
+  try {
+    const rawUrl = String(req.body.albumUrl || '').trim();
+    if (!rawUrl) {
+      return res.status(400).json({ error: 'アルバムURLが指定されていません' });
+    }
+
+    let targetUrl = rawUrl;
+    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+      targetUrl = 'https://' + targetUrl;
+    }
+
+    const response = await fetch(targetUrl, {
+      redirect: 'follow',
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'ja,en;q=0.9'
+      }
+    });
+
+    const text = await response.text();
+    // Googleフォト共有アルバム内の写真URL（lh3.googleusercontent.com/pw/...）を検出
+    const match = text.match(/(https:\/\/lh3\.googleusercontent\.com\/pw\/[a-zA-Z0-9_\-]+)/);
+    if (match) {
+      const photoUrl = match[1] + '=w800-no';
+      return res.json({
+        success: true,
+        photoUrl: photoUrl,
+        albumUrl: targetUrl
+      });
+    }
+
+    return res.json({
+      success: false,
+      error: 'アルバムから代表画像を取得できませんでした'
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || 'アルバムの読み込みに失敗しました' });
   }
 });
 

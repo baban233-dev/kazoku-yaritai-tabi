@@ -5,7 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { Plus, X, Move, Check, ExternalLink, Link2, Search, MapPin, AlertCircle } from 'lucide-react';
+import { Plus, X, Move, Check, ExternalLink, Link2, Search, MapPin, AlertCircle, Camera, Calendar, Sparkles } from 'lucide-react';
 
 interface DestinationItem {
   id: string;
@@ -21,6 +21,8 @@ interface DestinationItem {
   status: '行きたい' | '行った';
   visitedDate?: string;
   visitedMemo?: string;
+  albumUrl?: string;
+  photoUrl?: string;
   registeredAt?: string;
 }
 
@@ -81,17 +83,19 @@ const INITIAL_SPOTS: DestinationItem[] = [
   },
   {
     id: 'spot-3',
-    name: 'ゆうえんち',
+    name: 'ゆうえんち（あきる野）',
     category: '場所',
     latitude: 35.82,
     longitude: 139.28,
-    address: 'あきる野',
+    address: '東京都あきる野市',
     poster: '👦 けんた',
-    desire: 3,
+    desire: 4,
     memo: 'みんなで観覧車に乗ったよ！',
     status: '行った',
     visitedDate: '2026-11-10',
-    visitedMemo: '青空の下で乗った観覧車が最高でした！',
+    visitedMemo: '青空の下で乗った大観覧車が最高でした！みんなでソフトクリームも食べたよ🍦',
+    albumUrl: 'https://photos.app.goo.gl/sample-album',
+    photoUrl: 'https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9?auto=format&fit=crop&w=800&q=80',
     registeredAt: '2026-11-05'
   }
 ];
@@ -222,6 +226,14 @@ export default function App() {
   // ピンのドラッグ調整モード
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
 
+  // 行った記録モーダルのState (Step 6)
+  const [visitedModalItem, setVisitedModalItem] = useState<DestinationItem | null>(null);
+  const [visitedDate, setVisitedDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [visitedMemo, setVisitedMemo] = useState<string>('');
+  const [visitedAlbumUrl, setVisitedAlbumUrl] = useState<string>('');
+  const [visitedPhotoUrl, setVisitedPhotoUrl] = useState<string>('');
+  const [isLoadingAlbum, setIsLoadingAlbum] = useState<boolean>(false);
+
   // Form State
   const [formPoster, setFormPoster] = useState('👨 お父さん');
   const [formCategory, setFormCategory] = useState<'場所' | '店' | 'やりたいこと'>('店');
@@ -307,6 +319,7 @@ export default function App() {
           <div style="color:${isVisited ? '#2e7d32' : '#d78839'}; font-weight:800; font-size:11px;">
             ${isVisited ? '行った！🍓' : '行きたい！🍞'}
           </div>
+          ${item.photoUrl ? `<div style="margin-top:4px; margin-bottom:4px; border-radius:6px; overflow:hidden; width:100%; height:64px; border:1.5px solid #7ab877;"><img src="${item.photoUrl}" style="width:100%; height:100%; object-fit:cover;" /></div>` : ''}
           ${item.address ? `<div style="font-size:10px; color:#7a583e; margin-top:2px;">📍 ${item.address}</div>` : ''}
           ${item.url ? `<div style="font-size:9px; color:#c96e1b; margin-top:2px;">🔗 リンクあり</div>` : ''}
           <div style="font-size:10px; color:#964d1f; font-weight:800; margin-top:2px;">${item.poster}</div>
@@ -332,6 +345,27 @@ export default function App() {
         };
         btnRow.appendChild(viewDetailBtn);
 
+        if (!isVisited) {
+          const visitedBtn = document.createElement('button');
+          visitedBtn.innerText = '🍓 行った！';
+          visitedBtn.style.padding = '3px 8px';
+          visitedBtn.style.fontSize = '10px';
+          visitedBtn.style.fontWeight = '900';
+          visitedBtn.style.color = '#fff';
+          visitedBtn.style.backgroundColor = '#2e7d32';
+          visitedBtn.style.border = 'none';
+          visitedBtn.style.borderRadius = '10px';
+          visitedBtn.style.cursor = 'pointer';
+          visitedBtn.onclick = () => {
+            setVisitedModalItem(item);
+            setVisitedDate(new Date().toISOString().slice(0, 10));
+            setVisitedMemo('');
+            setVisitedAlbumUrl(item.albumUrl || '');
+            setVisitedPhotoUrl(item.photoUrl || '');
+          };
+          btnRow.appendChild(visitedBtn);
+        }
+
         popupContent.appendChild(btnRow);
         marker.bindPopup(popupContent);
         markersMapRef.current.set(item.id, marker);
@@ -344,6 +378,78 @@ export default function App() {
     setTimeout(() => {
       setToastMessage(null);
     }, 3200);
+  };
+
+  // Googleフォト共有アルバムから代表写真を読み込み (Step 6)
+  const handleFetchAlbumCover = async (albumUrlInput?: string) => {
+    const urlToFetch = (albumUrlInput ?? visitedAlbumUrl).trim();
+    if (!urlToFetch) {
+      showToast('⚠️ アルバムURLを入力してください');
+      return;
+    }
+    setIsLoadingAlbum(true);
+    try {
+      const res = await fetch('/api/album-cover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ albumUrl: urlToFetch })
+      });
+      const data = await res.json();
+      if (data.success && data.photoUrl) {
+        setVisitedPhotoUrl(data.photoUrl);
+        showToast('📷 アルバムの写真を読み込みました！');
+      } else {
+        showToast('⚠️ 写真を取得できませんでした。共有アルバムURLを確認してください');
+      }
+    } catch (err) {
+      console.error('Failed to load album cover:', err);
+      showToast('⚠️ アルバム写真の取得に失敗しました');
+    } finally {
+      setIsLoadingAlbum(false);
+    }
+  };
+
+  // 行った記録を保存（Step 6）
+  const handleSaveVisited = () => {
+    if (!visitedModalItem) return;
+    const finalDate = visitedDate.trim() || new Date().toISOString().slice(0, 10);
+    const finalMemo = visitedMemo.trim() || undefined;
+    const finalAlbumUrl = visitedAlbumUrl.trim() || undefined;
+    const finalPhotoUrl = visitedPhotoUrl.trim() || undefined;
+
+    setDestinations((prev) =>
+      prev.map((d) => {
+        if (d.id === visitedModalItem.id) {
+          return {
+            ...d,
+            status: '行った',
+            visitedDate: finalDate,
+            visitedMemo: finalMemo,
+            albumUrl: finalAlbumUrl,
+            photoUrl: finalPhotoUrl
+          };
+        }
+        return d;
+      })
+    );
+
+    // selectedItem が開かれている場合は更新
+    setSelectedItem((prev) => {
+      if (prev && prev.id === visitedModalItem.id) {
+        return {
+          ...prev,
+          status: '行った',
+          visitedDate: finalDate,
+          visitedMemo: finalMemo,
+          albumUrl: finalAlbumUrl,
+          photoUrl: finalPhotoUrl
+        };
+      }
+      return prev;
+    });
+
+    showToast(`🎉「${visitedModalItem.name}」の思い出を記録しました！🍓`);
+    setVisitedModalItem(null);
   };
 
   const handleCardClick = (item: DestinationItem) => {
@@ -674,8 +780,21 @@ export default function App() {
                             {'🍞'.repeat(item.desire || 1)}
                           </span>
                         </div>
-                        <div className="w-full h-14 rounded-lg bg-[#fdf6ec] border border-[#ecd8c0] flex items-center justify-center text-2xl mb-1.5 shadow-inner">
-                          {getCategoryEmoji(item.category)}
+                        <div className="w-full h-14 rounded-lg bg-[#fdf6ec] border border-[#ecd8c0] flex items-center justify-center text-2xl mb-1.5 shadow-inner overflow-hidden relative">
+                          {item.photoUrl ? (
+                            <>
+                              <img
+                                src={item.photoUrl}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
+                              <span className="absolute bottom-1 right-1 bg-black/60 text-white text-[8px] px-1 rounded-sm flex items-center gap-0.5">
+                                📷
+                              </span>
+                            </>
+                          ) : (
+                            getCategoryEmoji(item.category)
+                          )}
                         </div>
                         <div
                           className="text-[11px] font-black text-[#4a2810] truncate"
@@ -686,6 +805,11 @@ export default function App() {
                         {item.address && (
                           <div className="text-[9px] text-[#7a583e] truncate" title={item.address}>
                             📍 {item.address}
+                          </div>
+                        )}
+                        {item.albumUrl && (
+                          <div className="text-[8px] text-[#2e7d32] truncate font-bold mt-0.5 flex items-center gap-0.5">
+                            📷 アルバム連携
                           </div>
                         )}
                         {item.url && (
@@ -1112,9 +1236,64 @@ export default function App() {
                     </span>
                   </div>
                 )}
+
+                {/* 行った記録をつけるボタン（行きたい！の場合） */}
+                {selectedItem.status !== '行った' && (
+                  <button
+                    onClick={() => {
+                      setVisitedModalItem(selectedItem);
+                      setVisitedDate(new Date().toISOString().slice(0, 10));
+                      setVisitedMemo('');
+                      setVisitedAlbumUrl(selectedItem.albumUrl || '');
+                      setVisitedPhotoUrl(selectedItem.photoUrl || '');
+                    }}
+                    className="w-full py-2.5 bg-gradient-to-b from-[#4caf50] to-[#2e7d32] hover:from-[#43a047] hover:to-[#1b5e20] text-white rounded-full text-xs font-black shadow-md border-2 border-[#1e5222] flex items-center justify-center gap-1.5 cursor-pointer mt-1 active:scale-98 transition-all"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>🍓 行った記録をつける（Googleフォト連携）</span>
+                  </button>
+                )}
+
+                {/* 行った後の写真・アルバム表示 */}
+                {selectedItem.status === '行った' && (selectedItem.photoUrl || selectedItem.albumUrl) && (
+                  <div className="mt-1 p-2.5 bg-[#f4fbf4] rounded-2xl border-2 border-[#7ab877]">
+                    <div className="text-[11px] font-black text-[#2e7d32] mb-1.5 flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>アルバムの思い出写真</span>
+                      </span>
+                      {selectedItem.visitedDate && (
+                        <span className="text-[10px] text-[#4e7028] font-bold">
+                          {selectedItem.visitedDate}
+                        </span>
+                      )}
+                    </div>
+                    {selectedItem.photoUrl && (
+                      <div className="relative rounded-xl overflow-hidden border-2 border-[#a3d9a0] shadow-sm aspect-video bg-[#e8f5e9]">
+                        <img
+                          src={selectedItem.photoUrl}
+                          alt={selectedItem.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    {selectedItem.albumUrl && (
+                      <a
+                        href={selectedItem.albumUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 flex items-center justify-center w-full py-2 px-3 bg-[#e8f5e9] hover:bg-[#c8e6c9] border-2 border-[#2e7d32] text-[#1b5e20] rounded-xl text-xs font-black gap-1.5 cursor-pointer shadow-xs transition-colors"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>Googleフォトでアルバムを見る</span>
+                        <ExternalLink className="w-3 h-3 ml-0.5" />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div className="p-3 bg-[#fbf6ec] border-t border-[#ecd8c0] flex gap-2">
+              <div className="p-3 bg-[#fbf6ec] border-t border-[#ecd8c0] flex gap-2 flex-wrap">
                 {selectedItem.latitude && selectedItem.longitude && (
                   <>
                     <button
@@ -1144,12 +1323,144 @@ export default function App() {
                     </button>
                   </>
                 )}
+                {selectedItem.status === '行った' && (
+                  <button
+                    onClick={() => {
+                      setVisitedModalItem(selectedItem);
+                      setVisitedDate(selectedItem.visitedDate || new Date().toISOString().slice(0, 10));
+                      setVisitedMemo(selectedItem.visitedMemo || '');
+                      setVisitedAlbumUrl(selectedItem.albumUrl || '');
+                      setVisitedPhotoUrl(selectedItem.photoUrl || '');
+                    }}
+                    className="py-2 px-3 bg-[#e8f5e9] border-2 border-[#2e7d32] text-[#1b5e20] rounded-full text-xs font-black shadow-sm cursor-pointer flex items-center gap-1"
+                  >
+                    <span>🍓 思い出編集</span>
+                  </button>
+                )}
                 <button
                   onClick={() => setSelectedItem(null)}
                   className="py-2 px-4 bg-[#e8d8c3] border border-[#b89f82] rounded-full text-xs font-black text-[#7a583e] cursor-pointer"
                 >
                   閉じる
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ⑧ 行った記録モーダル (Step 6) */}
+        {visitedModalItem && (
+          <div className="fixed inset-0 bg-[#4a2810]/60 backdrop-blur-xs flex items-center justify-center p-4 z-[3100]">
+            <div className="w-full max-w-[390px] bg-[#fffdf9] border-[3.5px] border-[#2e7d32] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-150">
+              <div className="bg-[#e8f5e9] border-b-2 border-[#a5d6a7] px-4 py-3 flex justify-between items-center">
+                <div className="text-sm font-black text-[#1b5e20] flex items-center gap-1.5 truncate max-w-[280px]">
+                  <span>🍓</span>
+                  <span>行った記録をのこす: {visitedModalItem.name}</span>
+                </div>
+                <button
+                  onClick={() => setVisitedModalItem(null)}
+                  className="text-[#388e3c] hover:text-[#1b5e20] font-black text-xl leading-none cursor-pointer p-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-4 overflow-y-auto flex flex-col gap-3 text-xs">
+                {/* 行った日 */}
+                <div>
+                  <label className="block text-[11px] font-black text-[#1b5e20] mb-1 flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>行った日</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={visitedDate}
+                    onChange={(e) => setVisitedDate(e.target.value)}
+                    className="w-full border-2 border-[#c8e6c9] rounded-xl px-3 py-2 text-xs bg-white text-[#2e7d32] font-black focus:outline-none focus:border-[#2e7d32]"
+                  />
+                </div>
+
+                {/* 行ったメモ・思い出 */}
+                <div>
+                  <label className="block text-[11px] font-black text-[#1b5e20] mb-1">
+                    🍓 思い出・ひとことメモ
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={visitedMemo}
+                    onChange={(e) => setVisitedMemo(e.target.value)}
+                    placeholder="例: 名物のトマトラーメンが最高だった！シメのチーズご飯も美味しかったよ🍅"
+                    className="w-full border-2 border-[#c8e6c9] rounded-xl px-3 py-2 text-xs bg-white text-[#4a2810] placeholder:text-[#9e9e9e] focus:outline-none focus:border-[#2e7d32] resize-none"
+                  />
+                </div>
+
+                {/* Googleフォト共有アルバムURL */}
+                <div className="bg-[#f1f8e9] p-3 rounded-2xl border-2 border-[#c5e1a5]">
+                  <label className="block text-[11px] font-black text-[#33691e] mb-1 flex items-center gap-1">
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Googleフォト 共有アルバムURL（任意）</span>
+                  </label>
+                  <p className="text-[10px] text-[#558b2f] mb-2 leading-relaxed">
+                    Googleフォトで共有リンク（photos.app.goo.gl/...）を作成して貼り付けると、代表写真が自動でカードに飾られます！📷
+                  </p>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={visitedAlbumUrl}
+                      onChange={(e) => setVisitedAlbumUrl(e.target.value)}
+                      placeholder="https://photos.app.goo.gl/..."
+                      className="flex-1 border-2 border-[#c5e1a5] rounded-xl px-2.5 py-1.5 text-xs bg-white text-[#33691e] placeholder:text-[#aed581] focus:outline-none focus:border-[#558b2f]"
+                    />
+                    <button
+                      type="button"
+                      disabled={isLoadingAlbum}
+                      onClick={() => handleFetchAlbumCover()}
+                      className="px-3 py-1.5 bg-[#558b2f] hover:bg-[#33691e] disabled:bg-[#9e9e9e] text-white rounded-xl text-xs font-black cursor-pointer shadow-xs transition-colors"
+                    >
+                      {isLoadingAlbum ? '取得中...' : '写真を読込'}
+                    </button>
+                  </div>
+
+                  {/* 取得できた写真のプレビュー */}
+                  {visitedPhotoUrl && (
+                    <div className="mt-3 p-2 bg-white rounded-xl border-2 border-[#8bc34a] shadow-xs">
+                      <div className="text-[10px] font-black text-[#2e7d32] mb-1 flex items-center justify-between">
+                        <span>✨ 代表写真を読み込みました</span>
+                        <button
+                          type="button"
+                          onClick={() => setVisitedPhotoUrl('')}
+                          className="text-[10px] text-[#e0523d] font-black hover:underline"
+                        >
+                          削除
+                        </button>
+                      </div>
+                      <div className="relative rounded-lg overflow-hidden border border-[#c8e6c9] aspect-video">
+                        <img
+                          src={visitedPhotoUrl}
+                          alt="Album cover preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setVisitedModalItem(null)}
+                    className="flex-1 py-2.5 bg-[#e8d8c3] border border-[#b89f82] rounded-full text-xs font-black text-[#7a583e] cursor-pointer"
+                  >
+                    やめる
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveVisited}
+                    className="flex-[2] py-2.5 bg-gradient-to-b from-[#4caf50] to-[#2e7d32] hover:from-[#43a047] hover:to-[#1b5e20] text-white rounded-full text-xs font-black shadow-[0_3px_0_#1b5e20] border-2 border-[#1e5222] active:translate-y-0.5 active:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span>🍓 思い出を保存する！</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

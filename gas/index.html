@@ -19,7 +19,8 @@
 </head>
 <body class="bg-[#f3e9db] text-[#4a2810] flex justify-center min-h-screen">
   <div class="w-full max-w-[430px] min-h-screen bg-[#fbf6ec] shadow-2xl flex flex-col relative border-x-[3px] border-[#dfcfbd]">
-
+    
+    <!-- ヘッダー -->
     <header class="bg-gradient-to-b from-[#f7e6cf] to-[#ebd4b7] border-b-[3px] border-[#8a481c] px-4 py-3 flex items-center justify-between shadow-xs">
       <div class="flex items-center gap-2">
         <span class="text-2xl">🍞</span>
@@ -31,11 +32,14 @@
       <button onclick="openModal()" class="w-9 h-9 rounded-full bg-[#d78839] hover:bg-[#b86518] text-white flex items-center justify-center font-black shadow-md border-2 border-[#8a481c] cursor-pointer">＋</button>
     </header>
 
+    <!-- メインコンテンツ -->
     <main class="flex-1 overflow-y-auto pb-24 p-3 space-y-3">
+      <!-- ヒーロー画像（比率 1024 / 590 で下部ペイント地図をカット） -->
       <div class="w-full overflow-hidden rounded-2xl border-[3px] border-[#8a481c] shadow-md bg-[#c3e2f5] relative" style="aspect-ratio: 1024 / 590;">
         <img src="https://raw.githubusercontent.com/baban233-dev/kazoku-yaritai-tabi/main/file_000000001d4c81faaac961a36e8f3609.png" alt="ほっかほっカー" class="w-full h-auto block object-top" onerror="this.style.display='none'">
       </div>
 
+      <!-- 地図エリア -->
       <div class="bg-[#fffdf8] p-2 rounded-2xl border-[3px] border-[#8a481c] shadow-md">
         <div class="flex justify-between items-center mb-1.5 px-1">
           <span class="text-xs font-black text-[#8a481c]">📍 いまの地図</span>
@@ -48,23 +52,31 @@
         </div>
       </div>
 
+      <!-- 行き先リストとフィルター -->
       <div>
         <div class="flex justify-between items-center mb-2 px-1">
           <div class="text-sm font-black text-[#5c3010]">🚩 行き先リスト</div>
-          <div id="counter" class="text-[10px] font-extrabold text-[#7a583e]"></div>
+          <div class="flex gap-1">
+            <button onclick="setFilter('all')" id="btn-filter-all" class="text-[10px] font-black px-2 py-0.5 rounded-full border bg-[#8a481c] text-white border-[#5c3010]">すべて</button>
+            <button onclick="setFilter('want')" id="btn-filter-want" class="text-[10px] font-black px-2 py-0.5 rounded-full border bg-white text-[#7a583e] border-[#d9be9b]">行きたい</button>
+            <button onclick="setFilter('visited')" id="btn-filter-visited" class="text-[10px] font-black px-2 py-0.5 rounded-full border bg-white text-[#7a583e] border-[#d9be9b]">行った🍓</button>
+          </div>
         </div>
-        <div id="card-list" class="flex gap-2.5 overflow-x-auto py-1 px-0.5 no-scrollbar min-h-[125px]">
+        <div id="counter" class="text-[10px] font-extrabold text-[#7a583e] px-1 mb-1"></div>
+        <div id="card-list" class="flex gap-2.5 overflow-x-auto py-1 px-0.5 no-scrollbar min-h-[130px]">
           <div class="text-xs text-[#7a583e] py-6 w-full text-center">読み込み中...🍞</div>
         </div>
       </div>
 
+      <!-- 投稿ボタン -->
       <div class="pt-2">
-        <button onclick="openModal()" class="w-full py-3.5 bg-gradient-to-b from-[#f78d3f] to-[#db5b1a] text-white font-black text-sm rounded-full shadow-[0_4px_0_#702a06] border-2 border-[#8e380b] flex items-center justify-center gap-2 cursor-pointer">
+        <button onclick="openModal()" class="w-full py-3.5 bg-gradient-to-b from-[#f78d3f] to-[#db5b1a] text-white font-black text-sm rounded-full shadow-[0_4px_0_#702a06] border-2 border-[#8e380b] flex items-center justify-center gap-2 cursor-pointer active:translate-y-0.5">
           <span>＋ 新しく投稿する</span>
         </button>
       </div>
     </main>
 
+    <!-- 投稿モーダル -->
     <div id="postModal" class="hidden fixed inset-0 bg-[#4a2810]/60 backdrop-blur-xs flex items-center justify-center p-4 z-[3000]">
       <div class="w-full max-w-[390px] bg-[#fffdf9] border-[3.5px] border-[#8a481c] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         <div class="bg-[#f7e6cf] border-b-2 border-[#d9be9b] px-4 py-3 flex justify-between items-center">
@@ -107,13 +119,91 @@
           </div>
 
           <div class="pt-2 flex gap-2">
-            <button type="button" onclick="closeModal()" class="flex-1 py-2.5 bg-[#e8d8c3] rounded-full text-xs font-black text-[#7a583e]">やめる</button>
-            <button type="submit" id="submitBtn" class="flex-[2] py-2.5 bg-[#db5b1a] text-white rounded-full text-xs font-black shadow-md">ほっかほっカーで登録</button>
+            <button type="button" onclick="closeModal()" class="flex-1 py-2.5 bg-[#e8d8c3] rounded-full text-xs font-black text-[#7a583e] cursor-pointer">やめる</button>
+            <button type="submit" id="submitBtn" class="flex-[2] py-2.5 bg-[#db5b1a] text-white rounded-full text-xs font-black shadow-md cursor-pointer">ほっかほっカーで登録</button>
           </div>
         </form>
       </div>
     </div>
 
+    <!-- 詳細モーダル -->
+    <div id="detailModal" class="hidden fixed inset-0 bg-[#4a2810]/60 backdrop-blur-xs flex items-center justify-center p-4 z-[3050]">
+      <div class="w-full max-w-[390px] bg-[#fffdf9] border-[3.5px] border-[#8a481c] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+        <div class="bg-[#f7e6cf] border-b-2 border-[#d9be9b] px-4 py-3 flex justify-between items-center">
+          <div id="detailName" class="text-sm font-black text-[#8a481c] truncate max-w-[280px]"></div>
+          <button onclick="closeDetailModal()" class="text-xl font-black text-[#7a583e] cursor-pointer">&times;</button>
+        </div>
+        <div class="p-4 flex flex-col gap-2.5 text-xs">
+          <div class="flex">
+            <span class="w-20 font-black text-[#7a583e]">状態</span>
+            <span id="detailStatus" class="font-black"></span>
+          </div>
+          <div class="flex">
+            <span class="w-20 font-black text-[#7a583e]">場所・住所</span>
+            <span id="detailAddress" class="font-extrabold text-[#4a2810]"></span>
+          </div>
+          <div id="detailUrlRow" class="hidden flex items-center">
+            <span class="w-20 font-black text-[#7a583e]">紹介リンク</span>
+            <a id="detailUrlLink" href="#" target="_blank" class="font-black text-[#d78839] underline truncate">リンクを開く ↗</a>
+          </div>
+          <div id="detailVisitedMemoRow" class="hidden flex">
+            <span class="w-20 font-black text-[#2e7d32]">行った記録</span>
+            <span id="detailVisitedMemo" class="font-extrabold text-[#2e7d32] whitespace-pre-wrap"></span>
+          </div>
+          <div id="detailPhotoBox" class="hidden mt-1 p-2 bg-[#f4fbf4] rounded-2xl border-2 border-[#7ab877]">
+            <div class="text-[10px] font-black text-[#2e7d32] mb-1 flex items-center gap-1">📷 アルバムの思い出</div>
+            <div class="rounded-xl overflow-hidden border border-[#a3d9a0] aspect-video">
+              <img id="detailPhotoImg" src="" alt="Album photo" class="w-full h-full object-cover">
+            </div>
+            <a id="detailAlbumLink" href="#" target="_blank" class="mt-2 flex items-center justify-center w-full py-1.5 bg-[#e8f5e9] border border-[#2e7d32] text-[#1b5e20] rounded-xl text-xs font-black">
+              Googleフォトでアルバムを見る ↗
+            </a>
+          </div>
+          <button id="btnOpenVisitedModal" onclick="openVisitedModalFromDetail()" class="hidden w-full py-2.5 bg-gradient-to-b from-[#4caf50] to-[#2e7d32] text-white rounded-full text-xs font-black shadow-md cursor-pointer mt-1">
+            🍓 行った記録をつける（Googleフォト連携）
+          </button>
+        </div>
+        <div class="p-3 bg-[#fbf6ec] border-t border-[#ecd8c0] flex gap-2">
+          <button onclick="closeDetailModal()" class="w-full py-2 bg-[#e8d8c3] rounded-full text-xs font-black text-[#7a583e] cursor-pointer">閉じる</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 行った記録モーダル (Step 6) -->
+    <div id="visitedModal" class="hidden fixed inset-0 bg-[#4a2810]/60 backdrop-blur-xs flex items-center justify-center p-4 z-[3100]">
+      <div class="w-full max-w-[390px] bg-[#fffdf9] border-[3.5px] border-[#2e7d32] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        <div class="bg-[#e8f5e9] border-b-2 border-[#a5d6a7] px-4 py-3 flex justify-between items-center">
+          <div class="text-sm font-black text-[#1b5e20]">🍓 行った思い出をのこす</div>
+          <button onclick="closeVisitedModal()" class="text-xl font-black text-[#1b5e20] cursor-pointer">&times;</button>
+        </div>
+        <form onsubmit="handleVisitedSubmit(event)" class="p-4 overflow-y-auto flex flex-col gap-3 text-xs">
+          <div>
+            <label class="block text-[11px] font-black text-[#1b5e20] mb-1">行った日</label>
+            <input type="date" id="visitedDate" required class="w-full border-2 border-[#c8e6c9] rounded-xl px-3 py-2 text-xs bg-white text-[#2e7d32] font-black">
+          </div>
+          <div>
+            <label class="block text-[11px] font-black text-[#1b5e20] mb-1">🍓 思い出・ひとことメモ</label>
+            <textarea id="visitedMemo" rows="3" placeholder="名物の料理がとても美味しかった！" class="w-full border-2 border-[#c8e6c9] rounded-xl px-3 py-2 text-xs bg-white resize-none"></textarea>
+          </div>
+          <div class="bg-[#f1f8e9] p-2.5 rounded-2xl border-2 border-[#c5e1a5]">
+            <label class="block text-[11px] font-black text-[#33691e] mb-1">Googleフォト 共有アルバムURL（任意）</label>
+            <div class="flex gap-1.5">
+              <input type="text" id="visitedAlbumUrl" placeholder="https://photos.app.goo.gl/..." class="flex-1 border-2 border-[#c5e1a5] rounded-xl px-2 py-1.5 text-xs bg-white">
+              <button type="button" onclick="fetchAlbumCover()" id="btnFetchAlbum" class="px-2.5 py-1.5 bg-[#558b2f] text-white rounded-xl text-xs font-black cursor-pointer">読込</button>
+            </div>
+            <div id="albumPreviewBox" class="hidden mt-2 rounded-xl overflow-hidden border border-[#8bc34a] aspect-video">
+              <img id="albumPreviewImg" src="" alt="Album Cover" class="w-full h-full object-cover">
+            </div>
+          </div>
+          <div class="pt-2 flex gap-2">
+            <button type="button" onclick="closeVisitedModal()" class="flex-1 py-2.5 bg-[#e8d8c3] rounded-full text-xs font-black text-[#7a583e] cursor-pointer">やめる</button>
+            <button type="submit" class="flex-[2] py-2.5 bg-[#2e7d32] text-white rounded-full text-xs font-black shadow-md cursor-pointer">🍓 思い出を保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- トースト通知 -->
     <div id="toast" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[4000] bg-[#4a2810] text-[#fef9f0] px-4 py-2.5 rounded-full font-extrabold text-xs shadow-xl border-2 border-[#d78839]"></div>
   </div>
 
@@ -124,6 +214,9 @@
     let map;
     let markers = {};
     let destinations = [];
+    let currentFilter = 'all';
+    let currentDetailItem = null;
+    let currentVisitedPhotoUrl = '';
     let resolvedLat = null;
     let resolvedLng = null;
 
@@ -140,59 +233,118 @@
     window.onload = function() {
       map = L.map('map', { zoomControl: false, attributionControl: false }).setView([35.79, 139.30], 12);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+
+      // 初期日付設定
+      const dateEl = document.getElementById('visitedDate');
+      if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
+
       loadList();
     };
 
     function loadList() {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.withSuccessHandler(renderList).withFailureHandler(err => { console.error(err); showToast('読み込みに失敗しました'); renderList([]); }).getDestinationList();
+        google.script.run.withSuccessHandler(renderList).withFailureHandler(err => {
+          console.error(err);
+          showToast('読み込みに失敗しました');
+          renderList([]);
+        }).getDestinationList();
       } else {
         renderList([
           { id: '1', name: 'らーめん ニューカッパ', category: '店', address: '東京都羽村市小作台1丁目11-6 NTKビル1F', latitude: 35.7763, longitude: 139.3019, desire: 5, poster: 'お父さん', status: '行きたい' },
-          { id: '2', name: '担々麺杉山', category: '店', address: '東京都青梅市今寺4丁目5-24', latitude: 35.7972, longitude: 139.3005, desire: 5, poster: 'お父さん', status: '行きたい' }
+          { id: '2', name: '担々麺杉山', category: '店', address: '東京都青梅市今寺4丁目5-24', latitude: 35.7972, longitude: 139.3005, desire: 5, poster: 'お父さん', status: '行きたい' },
+          { id: '3', name: 'ゆうえんち（あきる野）', category: '場所', address: '東京都あきる野市', latitude: 35.82, longitude: 139.28, desire: 4, poster: 'けんた', status: '行った', visitedDate: '2026-11-10', visitedMemo: '大観覧車が最高でした！🍦', albumUrl: 'https://photos.app.goo.gl/sample', photoUrl: 'https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9?auto=format&fit=crop&w=800&q=80' }
         ]);
       }
     }
 
+    function setFilter(filter) {
+      currentFilter = filter;
+      ['all', 'want', 'visited'].forEach(f => {
+        const btn = document.getElementById('btn-filter-' + f);
+        if (!btn) return;
+        if (f === filter) {
+          btn.className = f === 'visited'
+            ? 'text-[10px] font-black px-2 py-0.5 rounded-full border bg-[#2e7d32] text-white border-[#1b5e20]'
+            : 'text-[10px] font-black px-2 py-0.5 rounded-full border bg-[#8a481c] text-white border-[#5c3010]';
+        } else {
+          btn.className = 'text-[10px] font-black px-2 py-0.5 rounded-full border bg-white text-[#7a583e] border-[#d9be9b]';
+        }
+      });
+      renderCards();
+    }
+
     function renderList(list) {
       destinations = list || [];
-      const container = document.getElementById('card-list');
-      container.innerHTML = '';
+      renderMarkers();
+      renderCards();
+    }
+
+    function renderMarkers() {
       Object.values(markers).forEach(m => map.removeLayer(m));
       markers = {};
-      let want = 0, visited = 0;
-      if (destinations.length === 0) {
-        container.innerHTML = '<div class="text-xs text-[#7a583e] py-6 w-full text-center">まだ登録がありません🍞</div>';
-      }
+
       destinations.forEach(item => {
-        const isVisited = (item.status === '行った');
-        if (isVisited) visited++; else want++;
         if (item.latitude && item.longitude) {
+          const isVisited = (item.status === '行った');
           const icon = isVisited ? visitedIcon : breadIcon;
           const m = L.marker([item.latitude, item.longitude], { icon: icon }).addTo(map).bindPopup(
             '<div style="font-weight:900;color:#4a2810;">' + item.name + '</div>' +
             '<div style="color:' + (isVisited ? '#2e7d32' : '#d78839') + ';font-weight:800;font-size:11px;">' + (isVisited ? '行った！🍓' : '行きたい！🍞') + '</div>' +
+            (item.photoUrl ? '<div style="margin:4px 0;width:100%;height:60px;overflow:hidden;border-radius:6px;border:1px solid #7ab877;"><img src="' + item.photoUrl + '" style="width:100%;height:100%;object-fit:cover;"></div>' : '') +
             (item.address ? '<div style="font-size:10px;color:#7a583e;margin-top:2px;">📍 ' + item.address + '</div>' : '')
           );
           markers[item.id] = m;
         }
-        const card = document.createElement('div');
-        card.className = 'flex-none w-[126px] bg-[#fffdf8] rounded-xl p-2 border-2 border-[#d9be9b] shadow-sm cursor-pointer';
-        card.onclick = () => {
-          if (item.latitude && item.longitude) {
-            map.flyTo([item.latitude, item.longitude], 15, { duration: 0.7 });
-            if (markers[item.id]) setTimeout(() => markers[item.id].openPopup(), 750);
-            showToast('「' + item.name + '」を表示したよ');
-          }
-        };
-        card.innerHTML =
-          '<div class="text-[9px] font-black text-[#e0523d]">' + (item.category || '') + '</div>' +
-          '<div class="text-xs font-black text-[#4a2810] truncate mt-1">' + item.name + '</div>' +
-          '<div class="text-[9px] text-[#7a583e] truncate mt-0.5">📍 ' + (item.address || '住所未設定') + '</div>' +
-          (item.latitude ? '<div class="text-[9px] text-[#d78839] font-black mt-0.5">📍 ピンあり</div>' : '');
-        container.appendChild(card);
+      });
+    }
+
+    function renderCards() {
+      const container = document.getElementById('card-list');
+      container.innerHTML = '';
+
+      let want = 0, visited = 0;
+      destinations.forEach(item => {
+        if (item.status === '行った') visited++; else want++;
       });
       document.getElementById('counter').textContent = '行きたい ' + want + '件 ・ 行った ' + visited + '件';
+
+      const filtered = destinations.filter(item => {
+        if (currentFilter === 'want') return item.status !== '行った';
+        if (currentFilter === 'visited') return item.status === '行った';
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-xs text-[#7a583e] py-6 w-full text-center">該当するスポットがありません🍞</div>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const isVisited = (item.status === '行った');
+        const card = document.createElement('div');
+        card.className = 'flex-none w-[126px] rounded-xl p-2 border-2 shadow-sm cursor-pointer flex flex-col justify-between ' +
+          (isVisited ? 'bg-[#f7fdf7] border-[#7ab877]' : 'bg-[#fffdf8] border-[#d9be9b]');
+
+        card.onclick = () => openDetailModal(item);
+
+        const photoHtml = item.photoUrl
+          ? '<div class="w-full h-14 rounded-lg overflow-hidden border border-[#ecd8c0] mb-1.5"><img src="' + item.photoUrl + '" class="w-full h-full object-cover"></div>'
+          : '<div class="w-full h-14 rounded-lg bg-[#fdf6ec] border border-[#ecd8c0] flex items-center justify-center text-2xl mb-1.5">' + (item.category === '店' ? '🍜' : '🎡') + '</div>';
+
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-[8px] font-black px-1.5 rounded text-white ${isVisited ? 'bg-[#2e7d32]' : 'bg-[#e0523d]'}">${isVisited ? '行った！' : (item.category || '場所')}</span>
+              <span class="text-[9px] text-[#b86518] font-bold">${'🍞'.repeat(item.desire || 1)}</span>
+            </div>
+            ${photoHtml}
+            <div class="text-xs font-black text-[#4a2810] truncate">${item.name}</div>
+            <div class="text-[9px] text-[#7a583e] truncate mt-0.5">📍 ${item.address || '住所未設定'}</div>
+            ${item.latitude ? '<div class="text-[9px] text-[#d78839] font-black mt-0.5">📍 ピンあり</div>' : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
     }
 
     function openModal() {
@@ -201,18 +353,172 @@
       document.getElementById('formName').value = '';
       document.getElementById('formAddress').value = '';
       document.getElementById('resolvedAddrPreview').classList.add('hidden');
-      resolvedLat = null; resolvedLng = null;
+      resolvedLat = null;
+      resolvedLng = null;
     }
-    function closeModal() { document.getElementById('postModal').classList.add('hidden'); }
+
+    function closeModal() {
+      document.getElementById('postModal').classList.add('hidden');
+    }
+
+    function openDetailModal(item) {
+      currentDetailItem = item;
+      document.getElementById('detailName').innerText = item.name;
+      const isVisited = item.status === '行った';
+      const statusEl = document.getElementById('detailStatus');
+      statusEl.innerText = isVisited ? `行った！🍓 (${item.visitedDate || ''})` : '行きたい！🍞';
+      statusEl.className = 'font-black ' + (isVisited ? 'text-[#2e7d32]' : 'text-[#d78839]');
+      document.getElementById('detailAddress').innerText = item.address || '未設定';
+
+      const urlRow = document.getElementById('detailUrlRow');
+      if (item.url) {
+        urlRow.classList.remove('hidden');
+        document.getElementById('detailUrlLink').href = item.url;
+      } else {
+        urlRow.classList.add('hidden');
+      }
+
+      const memoRow = document.getElementById('detailVisitedMemoRow');
+      if (item.visitedMemo) {
+        memoRow.classList.remove('hidden');
+        document.getElementById('detailVisitedMemo').innerText = item.visitedMemo;
+      } else {
+        memoRow.classList.add('hidden');
+      }
+
+      const photoBox = document.getElementById('detailPhotoBox');
+      if (item.photoUrl || item.albumUrl) {
+        photoBox.classList.remove('hidden');
+        if (item.photoUrl) {
+          document.getElementById('detailPhotoImg').src = item.photoUrl;
+          document.getElementById('detailPhotoImg').parentElement.classList.remove('hidden');
+        } else {
+          document.getElementById('detailPhotoImg').parentElement.classList.add('hidden');
+        }
+        if (item.albumUrl) {
+          document.getElementById('detailAlbumLink').href = item.albumUrl;
+          document.getElementById('detailAlbumLink').classList.remove('hidden');
+        } else {
+          document.getElementById('detailAlbumLink').classList.add('hidden');
+        }
+      } else {
+        photoBox.classList.add('hidden');
+      }
+
+      const btnVisited = document.getElementById('btnOpenVisitedModal');
+      if (!isVisited) {
+        btnVisited.classList.remove('hidden');
+      } else {
+        btnVisited.classList.add('hidden');
+      }
+
+      if (item.latitude && item.longitude && map) {
+        map.flyTo([item.latitude, item.longitude], 15, { duration: 0.7 });
+        if (markers[item.id]) setTimeout(() => markers[item.id].openPopup(), 750);
+      }
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    function openVisitedModalFromDetail() {
+      closeDetailModal();
+      if (!currentDetailItem) return;
+      document.getElementById('visitedMemo').value = '';
+      document.getElementById('visitedAlbumUrl').value = currentDetailItem.albumUrl || '';
+      document.getElementById('albumPreviewBox').classList.add('hidden');
+      currentVisitedPhotoUrl = '';
+      document.getElementById('visitedModal').classList.remove('hidden');
+    }
+
+    function closeVisitedModal() {
+      document.getElementById('visitedModal').classList.add('hidden');
+    }
+
+    function fetchAlbumCover() {
+      const url = document.getElementById('visitedAlbumUrl').value.trim();
+      if (!url) { showToast('アルバムURLを入力してね'); return; }
+      const btn = document.getElementById('btnFetchAlbum');
+      btn.disabled = true;
+      btn.innerText = '読込中…';
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(res => {
+          btn.disabled = false;
+          btn.innerText = '読込';
+          if (res && res.success && res.photoUrl) {
+            currentVisitedPhotoUrl = res.photoUrl;
+            document.getElementById('albumPreviewImg').src = res.photoUrl;
+            document.getElementById('albumPreviewBox').classList.remove('hidden');
+            showToast('写真を読み込みました！📷');
+          } else {
+            showToast('写真は取得できませんでしたがリンクは保存できます！');
+          }
+        }).withFailureHandler(err => {
+          btn.disabled = false;
+          btn.innerText = '読込';
+          console.error(err);
+          showToast('写真の取得に失敗しました');
+        }).getAlbumCover(url);
+      } else {
+        btn.disabled = false;
+        btn.innerText = '読込';
+        currentVisitedPhotoUrl = 'https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9?auto=format&fit=crop&w=800&q=80';
+        document.getElementById('albumPreviewImg').src = currentVisitedPhotoUrl;
+        document.getElementById('albumPreviewBox').classList.remove('hidden');
+        showToast('写真を読み込みました！（プレビュー）');
+      }
+    }
+
+    function handleVisitedSubmit(e) {
+      e.preventDefault();
+      if (!currentDetailItem) return;
+
+      const visitedDate = document.getElementById('visitedDate').value;
+      const visitedMemo = document.getElementById('visitedMemo').value.trim();
+      const albumUrl = document.getElementById('visitedAlbumUrl').value.trim();
+
+      const payload = {
+        visitedDate: visitedDate,
+        visitedMemo: visitedMemo,
+        albumUrl: albumUrl,
+        photoUrl: currentVisitedPhotoUrl
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(() => {
+          closeVisitedModal();
+          showToast('思い出を保存したよ！🍓');
+          loadList();
+        }).withFailureHandler(err => {
+          console.error(err);
+          showToast('保存に失敗しました');
+        }).markAsVisited(currentDetailItem.id, payload);
+      } else {
+        currentDetailItem.status = '行った';
+        currentDetailItem.visitedDate = visitedDate;
+        currentDetailItem.visitedMemo = visitedMemo;
+        currentDetailItem.albumUrl = albumUrl;
+        currentDetailItem.photoUrl = currentVisitedPhotoUrl;
+        renderList(destinations);
+        closeVisitedModal();
+        showToast('思い出を保存したよ！🍓（プレビュー）');
+      }
+    }
 
     function onUrlChange() {
       const url = document.getElementById('formUrl').value.trim();
       if (!url) { showToast('URLを入力してね'); return; }
       const btn = document.getElementById('resolveBtn');
-      btn.disabled = true; btn.textContent = '…';
+      btn.disabled = true;
+      btn.textContent = '…';
+
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run.withSuccessHandler(res => {
-          btn.disabled = false; btn.textContent = '調べる';
+          btn.disabled = false;
+          btn.textContent = '調べる';
           if (res && res.success) {
             if (res.name) document.getElementById('formName').value = res.name;
             if (res.address) {
@@ -220,21 +526,36 @@
               document.getElementById('resolvedAddrPreview').classList.remove('hidden');
               document.getElementById('resolvedAddrText').innerText = res.address;
             }
-            if (res.lat && res.lng) { resolvedLat = res.lat; resolvedLng = res.lng; map.flyTo([res.lat, res.lng], 14); }
+            if (res.lat && res.lng) {
+              resolvedLat = res.lat;
+              resolvedLng = res.lng;
+              map.flyTo([res.lat, res.lng], 14);
+            }
             showToast('住所を取得したよ！');
-          } else { showToast((res && res.error) || '取得できませんでした'); }
-        }).withFailureHandler(err => { btn.disabled = false; btn.textContent = '調べる'; console.error(err); showToast('調べるのに失敗しました'); }).resolveShareUrl(url);
+          } else {
+            showToast((res && res.error) || '取得できませんでした');
+          }
+        }).withFailureHandler(err => {
+          btn.disabled = false;
+          btn.textContent = '調べる';
+          console.error(err);
+          showToast('調べるのに失敗しました');
+        }).resolveShareUrl(url);
       } else {
-        btn.disabled = false; btn.textContent = '調べる';
+        btn.disabled = false;
+        btn.textContent = '調べる';
         if (url.includes('mzPtWbHNbOhSgIzVz') || url.includes('担々麺')) {
           document.getElementById('formName').value = '担々麺杉山';
           document.getElementById('formAddress').value = '東京都青梅市今寺4丁目5-24';
           document.getElementById('resolvedAddrPreview').classList.remove('hidden');
           document.getElementById('resolvedAddrText').innerText = '東京都青梅市今寺4丁目5-24';
-          resolvedLat = 35.7972; resolvedLng = 139.3005;
+          resolvedLat = 35.7972;
+          resolvedLng = 139.3005;
           map.flyTo([35.7972, 139.3005], 14);
           showToast('住所を取得したよ！（ローカル）');
-        } else { showToast('ローカルでは一部URLのみ対応'); }
+        } else {
+          showToast('ローカルでは一部URLのみ対応');
+        }
       }
     }
 
@@ -244,20 +565,54 @@
       const address = document.getElementById('formAddress').value.trim();
       const url = document.getElementById('formUrl').value.trim();
       const category = document.getElementById('formCategory').value;
+
       if (!name) { showToast('名前を入力してね'); return; }
-      const payload = { name, address, url, category, poster: 'お父さん', desire: 5, latitude: resolvedLat, longitude: resolvedLng };
+
+      const payload = {
+        name,
+        address,
+        url,
+        category,
+        poster: 'お父さん',
+        desire: 5,
+        latitude: resolvedLat,
+        longitude: resolvedLng
+      };
+
       const btn = document.getElementById('submitBtn');
-      btn.disabled = true; btn.textContent = '登録中…';
+      btn.disabled = true;
+      btn.textContent = '登録中…';
+
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run.withSuccessHandler(res => {
-          btn.disabled = false; btn.textContent = 'ほっかほっカーで登録';
-          closeModal(); showToast('登録したよ！'); loadList();
+          btn.disabled = false;
+          btn.textContent = 'ほっかほっカーで登録';
+          closeModal();
+          showToast('登録したよ！');
+          loadList();
           if (res && res.lat && res.lng) map.flyTo([res.lat, res.lng], 14);
-        }).withFailureHandler(err => { btn.disabled = false; btn.textContent = 'ほっかほっカーで登録'; console.error(err); showToast('登録に失敗しました'); }).submitDestination(payload);
+        }).withFailureHandler(err => {
+          btn.disabled = false;
+          btn.textContent = 'ほっかほっカーで登録';
+          console.error(err);
+          showToast('登録に失敗しました');
+        }).submitDestination(payload);
       } else {
-        btn.disabled = false; btn.textContent = 'ほっかほっカーで登録';
-        showToast('ローカルでは登録できません（GASで試してね）');
+        btn.disabled = false;
+        btn.textContent = 'ほっかほっカーで登録';
+        destinations.unshift({
+          id: 'spot-' + Date.now(),
+          name: name,
+          address: address,
+          url: url,
+          category: category,
+          poster: 'お父さん',
+          desire: 5,
+          status: '行きたい'
+        });
+        renderList(destinations);
         closeModal();
+        showToast('登録したよ！（プレビュー）');
       }
     }
   </script>
