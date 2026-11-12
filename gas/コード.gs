@@ -219,7 +219,7 @@ function getDestinations() {
     lat: headers.indexOf('緯度'),
     lng: headers.indexOf('経度'),
     url: headers.indexOf('紹介URL'),
-    registeredAt: headers.indexOf('登録日・更新日') >= 0 ? headers.indexOf('登録日・更新日') : headers.indexOf('登録日時')
+    registeredAt: headers.indexOf('登録日・更新日') >= 0 ? headers.indexOf('登録日・更新日') : (headers.indexOf('登録日時') >= 0 ? headers.indexOf('登録日時') : headers.indexOf('登録日'))
   };
 
   const list = [];
@@ -273,23 +273,30 @@ function submitDestination(formData) {
   const id = `spot-${Date.now()}`;
   const nowStr = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd HH:mm');
 
-  sheet.appendRow([
-    id,
-    formData.name,
-    formData.category || '場所',
-    lat,
-    lng,
-    formData.address || '',
-    formData.poster || '',
-    formData.desire || 3,
-    formData.memo || '',
-    '行きたい',
-    '', // 行った日
-    '', // 行ったメモ
-    '', // 写真リンク
-    formData.url || '',
-    nowStr
-  ]);
+  // 列の並びはシートのヘッダー名で引く（位置決めで書くと列構成の違いで壊れるため）
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const col = {};
+  headers.forEach((h, i) => { if (h) col[String(h)] = i; });
+  const row = new Array(headers.length).fill('');
+  const set = (headerNames, value) => {
+    for (const hn of headerNames) {
+      if (col[hn] !== undefined) { row[col[hn]] = value; return; }
+    }
+  };
+  set(['id'], id);
+  set(['名前', '名称'], formData.name);
+  set(['カテゴリ'], formData.category || '場所');
+  set(['緯度'], lat === null ? '' : lat);
+  set(['経度'], lng === null ? '' : lng);
+  set(['住所・最寄り', '場所・住所'], formData.address || '');
+  set(['投稿者'], formData.poster || '');
+  set(['行きたい度'], formData.desire || 3);
+  set(['メモ'], formData.memo || '');
+  set(['状態'], '行きたい');
+  set(['紹介URL'], formData.url || '');
+  set(['登録日・更新日', '登録日時', '登録日'], nowStr);
+  set(['更新日'], nowStr);
+  sheet.appendRow(row);
 
   return { success: true, id: id, lat: lat, lng: lng };
 }
@@ -317,6 +324,71 @@ function markAsVisited(id, payload) {
       if (visitedDateCol >= 0) sheet.getRange(r + 1, visitedDateCol + 1).setValue(payload.visitedDate || '');
       if (visitedMemoCol >= 0) sheet.getRange(r + 1, visitedMemoCol + 1).setValue(payload.visitedMemo || '');
       if (photoCol >= 0) sheet.getRange(r + 1, photoCol + 1).setValue(payload.albumUrl || '');
+      return { success: true };
+    }
+  }
+  return { success: false, error: '対象が見つかりませんでした' };
+}
+
+/**
+ * 登録済みスポットの編集（基本情報の更新）
+ * 住所が入っていればジオコーディングし直し、成功した場合のみ緯度・経度も更新する。
+ */
+function updateDestination(id, formData) {
+  const sheet = getSheet_();
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return { success: false, error: 'データがありません' };
+
+  const headers = data[0];
+  const idCol = headers.indexOf('id');
+  const nameCol = headers.indexOf('名前') >= 0 ? headers.indexOf('名前') : headers.indexOf('名称');
+  const categoryCol = headers.indexOf('カテゴリ');
+  const addressCol = headers.indexOf('住所・最寄り') >= 0 ? headers.indexOf('住所・最寄り') : headers.indexOf('場所・住所');
+  const posterCol = headers.indexOf('投稿者');
+  const urlCol = headers.indexOf('紹介URL');
+  const latCol = headers.indexOf('緯度');
+  const lngCol = headers.indexOf('経度');
+
+  for (let r = 1; r < data.length; r++) {
+    const rowId = idCol >= 0 ? data[r][idCol] : `spot-${r}`;
+    if (String(rowId) === String(id) || (data[r][nameCol] && data[r][nameCol] === id)) {
+      if (nameCol >= 0 && formData.name) sheet.getRange(r + 1, nameCol + 1).setValue(formData.name);
+      if (categoryCol >= 0 && formData.category) sheet.getRange(r + 1, categoryCol + 1).setValue(formData.category);
+      if (addressCol >= 0) sheet.getRange(r + 1, addressCol + 1).setValue(formData.address || '');
+      if (posterCol >= 0 && formData.poster) sheet.getRange(r + 1, posterCol + 1).setValue(formData.poster);
+      if (urlCol >= 0) sheet.getRange(r + 1, urlCol + 1).setValue(formData.url || '');
+
+      let lat = null, lng = null;
+      if (formData.address) {
+        const geo = geocodeAddress_(formData.address, formData.name || data[r][nameCol]);
+        if (geo) {
+          lat = geo.lat; lng = geo.lng;
+          if (latCol >= 0) sheet.getRange(r + 1, latCol + 1).setValue(lat);
+          if (lngCol >= 0) sheet.getRange(r + 1, lngCol + 1).setValue(lng);
+        }
+      }
+      return { success: true, lat: lat, lng: lng };
+    }
+  }
+  return { success: false, error: '対象が見つかりませんでした' };
+}
+
+/**
+ * 登録済みスポットの削除（行ごと削除）
+ */
+function deleteDestination(id) {
+  const sheet = getSheet_();
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return { success: false, error: 'データがありません' };
+
+  const headers = data[0];
+  const idCol = headers.indexOf('id');
+  const nameCol = headers.indexOf('名前') >= 0 ? headers.indexOf('名前') : headers.indexOf('名称');
+
+  for (let r = 1; r < data.length; r++) {
+    const rowId = idCol >= 0 ? data[r][idCol] : `spot-${r}`;
+    if (String(rowId) === String(id) || (data[r][nameCol] && data[r][nameCol] === id)) {
+      sheet.deleteRow(r + 1);
       return { success: true };
     }
   }

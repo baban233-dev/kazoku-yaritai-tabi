@@ -135,6 +135,51 @@
       </div>
     </div>
 
+    <!-- 編集モーダル -->
+    <div id="editModal" class="hidden fixed inset-0 bg-[#4a2810]/60 backdrop-blur-xs flex items-center justify-center p-4 z-[3080]">
+      <div class="w-full max-w-[390px] bg-[#fffdf9] border-[3.5px] border-[#c96e1b] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        <div class="bg-[#fff3e0] border-b-2 border-[#e0aa6e] px-4 py-3 flex justify-between items-center">
+          <div class="text-sm font-black text-[#8a3c00]">✏️ 編集する</div>
+          <button onclick="closeEditModal()" class="text-xl font-black text-[#7a583e] cursor-pointer">&times;</button>
+        </div>
+        <form onsubmit="handleEditSubmit(event)" class="p-4 overflow-y-auto flex flex-col gap-3">
+          <div>
+            <label class="block text-[11px] font-black text-[#4a2810] mb-1">誰のやりたいこと？</label>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button type="button" data-poster="👨 かずや" onclick="selectEditPoster(this)" class="edit-poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👨 かずや</button>
+              <button type="button" data-poster="👩 ひとみ" onclick="selectEditPoster(this)" class="edit-poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👩 ひとみ</button>
+              <button type="button" data-poster="👦 れん" onclick="selectEditPoster(this)" class="edit-poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👦 れん</button>
+              <button type="button" data-poster="👧 あやみ" onclick="selectEditPoster(this)" class="edit-poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👧 あやみ</button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-black text-[#4a2810] mb-1">行き先・店名 ※必須</label>
+            <input type="text" id="editName" required class="w-full border-2 border-[#d9be9b] rounded-xl px-3 py-2 text-sm bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-black text-[#4a2810] mb-1">カテゴリ</label>
+            <select id="editCategory" class="w-full border-2 border-[#d9be9b] rounded-xl px-3 py-2 text-sm bg-white">
+              <option value="店">店</option>
+              <option value="場所">場所</option>
+              <option value="やりたいこと">やりたいこと</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-black text-[#4a2810] mb-1">場所・住所（任意）</label>
+            <input type="text" id="editAddress" class="w-full border-2 border-[#d9be9b] rounded-xl px-3 py-2 text-sm bg-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-black text-[#4a2810] mb-1">紹介URL（任意）</label>
+            <input type="text" id="editUrl" class="w-full border-2 border-[#d9be9b] rounded-xl px-3 py-2 text-sm bg-white">
+          </div>
+          <div class="pt-2 flex gap-2">
+            <button type="button" onclick="closeEditModal()" class="flex-1 py-2.5 bg-[#e8d8c3] rounded-full text-xs font-black text-[#7a583e] cursor-pointer">やめる</button>
+            <button type="submit" id="editSubmitBtn" class="flex-[2] py-2.5 bg-[#db5b1a] text-white rounded-full text-xs font-black shadow-md cursor-pointer">保存する</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- 詳細モーダル -->
     <div id="detailModal" class="hidden fixed inset-0 bg-[#4a2810]/60 backdrop-blur-xs flex items-center justify-center p-4 z-[3050]">
       <div class="w-full max-w-[390px] bg-[#fffdf9] border-[3.5px] border-[#8a481c] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
@@ -175,6 +220,17 @@
           <button id="btnOpenVisitedModal" onclick="openVisitedModalFromDetail()" class="hidden w-full py-2.5 bg-gradient-to-b from-[#4caf50] to-[#2e7d32] text-white rounded-full text-xs font-black shadow-md cursor-pointer mt-1">
             🍓 行った記録をつける（Googleフォト連携）
           </button>
+          <div class="flex gap-2 mt-1">
+            <button onclick="openEditModal()" class="flex-1 py-2.5 bg-[#fff3e0] border-2 border-[#c96e1b] text-[#8a3c00] rounded-full text-xs font-black shadow-sm cursor-pointer">✏️ 編集する</button>
+            <button onclick="askDelete()" class="flex-1 py-2.5 bg-[#fdecea] border-2 border-[#e0523d] text-[#b71c1c] rounded-full text-xs font-black shadow-sm cursor-pointer">🗑 削除する</button>
+          </div>
+          <div id="deleteConfirmBox" class="hidden mt-2 p-2.5 bg-[#fdecea] border-2 border-[#e0523d] rounded-2xl">
+            <div class="text-[11px] font-black text-[#b71c1c] text-center mb-2">この行き先を本当に削除しますか？</div>
+            <div class="flex gap-2">
+              <button onclick="cancelDelete()" class="flex-1 py-2 bg-[#e8d8c3] rounded-full text-xs font-black text-[#7a583e] cursor-pointer">やめる</button>
+              <button id="deleteConfirmBtn" onclick="doDelete()" class="flex-1 py-2 bg-[#e0523d] text-white rounded-full text-xs font-black shadow cursor-pointer">削除する</button>
+            </div>
+          </div>
         </div>
         <div class="p-3 bg-[#fbf6ec] border-t border-[#ecd8c0] flex gap-2">
           <button onclick="closeDetailModal()" class="w-full py-2 bg-[#e8d8c3] rounded-full text-xs font-black text-[#7a583e] cursor-pointer">閉じる</button>
@@ -478,7 +534,7 @@
       document.getElementById('detailName').innerText = item.name;
       const isVisited = item.status === '行った';
       const statusEl = document.getElementById('detailStatus');
-      statusEl.innerText = isVisited ? `行った！🍓 (${item.visitedDate || ''})` : '行きたい！🍞';
+      statusEl.innerText = isVisited ? `行った！🍓 (${fmtDate(item.visitedDate)})` : '行きたい！🍞';
       statusEl.className = 'font-black ' + (isVisited ? 'text-[#2e7d32]' : 'text-[#d78839]');
       document.getElementById('detailAddress').innerText = item.address || '未設定';
       document.getElementById('detailPoster').innerText = posterLabel(item.poster);
@@ -519,11 +575,9 @@
       }
 
       const btnVisited = document.getElementById('btnOpenVisitedModal');
-      if (!isVisited) {
-        btnVisited.classList.remove('hidden');
-      } else {
-        btnVisited.classList.add('hidden');
-      }
+      btnVisited.classList.remove('hidden');
+      btnVisited.innerText = isVisited ? '🍓 思い出を編集する（Googleフォト連携）' : '🍓 行った記録をつける（Googleフォト連携）';
+      document.getElementById('deleteConfirmBox').classList.add('hidden');
 
       if (item.latitude && item.longitude && map) {
         map.flyTo([item.latitude, item.longitude], 15, { duration: 0.7 });
@@ -532,17 +586,144 @@
       document.getElementById('detailModal').classList.remove('hidden');
     }
 
+    // ===== 編集・削除 =====
+    let editingItem = null;
+    let editSelectedPoster = '👨 かずや';
+
+    function paintEditPosterButtons() {
+      document.querySelectorAll('.edit-poster-btn').forEach(b => {
+        const active = b.getAttribute('data-poster') === editSelectedPoster;
+        b.className = 'edit-poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center ' +
+          (active ? 'bg-[#ffe3b3] border-[#c96e1b] text-[#8a3c00] ring-1 ring-[#c96e1b]'
+                  : 'bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]');
+      });
+    }
+
+    function selectEditPoster(btn) {
+      editSelectedPoster = btn.getAttribute('data-poster');
+      paintEditPosterButtons();
+    }
+
+    function openEditModal() {
+      if (!currentDetailItem) return;
+      editingItem = currentDetailItem;
+      closeDetailModal();
+      document.getElementById('editName').value = editingItem.name || '';
+      document.getElementById('editCategory').value = editingItem.category || '場所';
+      document.getElementById('editAddress').value = editingItem.address || '';
+      document.getElementById('editUrl').value = editingItem.url || '';
+      editSelectedPoster = posterLabel(editingItem.poster) || '👨 かずや';
+      paintEditPosterButtons();
+      document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.add('hidden');
+    }
+
+    function handleEditSubmit(e) {
+      e.preventDefault();
+      if (!editingItem) return;
+      const name = document.getElementById('editName').value.trim();
+      if (!name) { showToast('名前を入力してね'); return; }
+      const payload = {
+        name: name,
+        category: document.getElementById('editCategory').value,
+        address: document.getElementById('editAddress').value.trim(),
+        url: document.getElementById('editUrl').value.trim(),
+        poster: editSelectedPoster
+      };
+      const btn = document.getElementById('editSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = '保存中…';
+      const done = () => { btn.disabled = false; btn.textContent = '保存する'; };
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(res => {
+          done();
+          if (res && res.success === false) { showToast('編集に失敗しました'); return; }
+          closeEditModal();
+          showToast('編集したよ！');
+          loadList();
+        }).withFailureHandler(err => {
+          done();
+          console.error(err);
+          showToast('編集に失敗しました');
+        }).updateDestination(editingItem.id, payload);
+      } else {
+        Object.assign(editingItem, payload);
+        done();
+        closeEditModal();
+        renderList(destinations);
+        showToast('編集したよ！（プレビュー）');
+      }
+    }
+
+    function askDelete() {
+      document.getElementById('deleteConfirmBox').classList.remove('hidden');
+    }
+
+    function cancelDelete() {
+      document.getElementById('deleteConfirmBox').classList.add('hidden');
+    }
+
+    function doDelete() {
+      if (!currentDetailItem) return;
+      const id = currentDetailItem.id;
+      const btn = document.getElementById('deleteConfirmBtn');
+      btn.disabled = true;
+      btn.textContent = '削除中…';
+      const done = () => { btn.disabled = false; btn.textContent = '削除する'; };
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(res => {
+          done();
+          if (res && res.success === false) { showToast('削除に失敗しました'); return; }
+          closeDetailModal();
+          showToast('削除したよ');
+          loadList();
+        }).withFailureHandler(err => {
+          done();
+          console.error(err);
+          showToast('削除に失敗しました');
+        }).deleteDestination(id);
+      } else {
+        destinations = destinations.filter(d => d.id !== id);
+        done();
+        closeDetailModal();
+        renderList(destinations);
+        showToast('削除したよ（プレビュー）');
+      }
+    }
+
     function closeDetailModal() {
       document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    // 表示用に yyyy/m/d へ整形（変換できなければ元の文字列）
+    function fmtDate(d) {
+      if (!d) return '';
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return String(d);
+      return dt.getFullYear() + '/' + (dt.getMonth() + 1) + '/' + dt.getDate();
+    }
+
+    // 日付入力欄用に yyyy-mm-dd へ整形（変換できなければ今日）
+    function toDateInputValue(d) {
+      const dt = d ? new Date(d) : null;
+      if (!dt || isNaN(dt.getTime())) return new Date().toISOString().slice(0, 10);
+      const m = ('0' + (dt.getMonth() + 1)).slice(-2);
+      const day = ('0' + dt.getDate()).slice(-2);
+      return dt.getFullYear() + '-' + m + '-' + day;
     }
 
     function openVisitedModalFromDetail() {
       closeDetailModal();
       if (!currentDetailItem) return;
-      document.getElementById('visitedMemo').value = '';
+      const isVisited = currentDetailItem.status === '行った';
+      document.getElementById('visitedDate').value = isVisited ? toDateInputValue(currentDetailItem.visitedDate) : new Date().toISOString().slice(0, 10);
+      document.getElementById('visitedMemo').value = isVisited ? (currentDetailItem.visitedMemo || '') : '';
       document.getElementById('visitedAlbumUrl').value = currentDetailItem.albumUrl || '';
       document.getElementById('albumPreviewBox').classList.add('hidden');
-      currentVisitedPhotoUrl = '';
+      currentVisitedPhotoUrl = isVisited ? (currentDetailItem.photoUrl || '') : '';
       document.getElementById('visitedModal').classList.remove('hidden');
     }
 
