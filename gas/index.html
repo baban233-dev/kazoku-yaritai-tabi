@@ -87,10 +87,10 @@
           <div>
             <label class="block text-[11px] font-black text-[#4a2810] mb-1">誰のやりたいこと？ <span class="text-[#e0523d] text-[9px]">※必須</span></label>
             <div class="grid grid-cols-4 gap-1.5" id="posterSelector">
-              <button type="button" data-poster="👨 お父さん" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#ffe3b3] border-[#c96e1b] text-[#8a3c00] ring-1 ring-[#c96e1b]">👨 お父さん</button>
-              <button type="button" data-poster="👩 お母さん" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👩 お母さん</button>
-              <button type="button" data-poster="👦 ゆうた" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👦 ゆうた</button>
-              <button type="button" data-poster="👧 あい" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👧 あい</button>
+              <button type="button" data-poster="👨 かずや" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#ffe3b3] border-[#c96e1b] text-[#8a3c00] ring-1 ring-[#c96e1b]">👨 かずや</button>
+              <button type="button" data-poster="👩 ひとみ" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👩 ひとみ</button>
+              <button type="button" data-poster="👦 れん" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👦 れん</button>
+              <button type="button" data-poster="👧 あやみ" onclick="selectPoster(this)" class="poster-btn py-2 px-1 rounded-xl text-xs font-extrabold border-2 transition-all cursor-pointer text-center bg-[#fbf6ec] border-[#d9be9b] text-[#4a2810]">👧 あやみ</button>
             </div>
           </div>
           <div class="bg-[#fff9ef] p-2.5 rounded-2xl border-2 border-[#d9be9b]">
@@ -229,12 +229,12 @@
     let destinations = [];
     let currentFilter = 'all';
     let currentDetailItem = null;
-    let selectedPoster = '👨 お父さん';
+    let selectedPoster = '👨 かずや';
 
     // 投稿者ラベル（旧データの絵文字なし表記にもアイコンを付けて表示）
     function posterLabel(p) {
       if (!p) return '';
-      const icons = { 'お父さん': '👨 お父さん', 'お母さん': '👩 お母さん', 'ゆうた': '👦 ゆうた', 'あい': '👧 あい', 'けんた': '👦 けんた' };
+      const icons = { 'お父さん': '👨 かずや', 'お母さん': '👩 ひとみ', 'ゆうた': '👦 れん', 'あい': '👧 あやみ', 'けんた': '👦 けんた', 'かずや': '👨 かずや', 'ひとみ': '👩 ひとみ', 'れん': '👦 れん', 'あやみ': '👧 あやみ' };
       return icons[p] || p;
     }
 

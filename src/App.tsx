@@ -35,7 +35,7 @@ const INITIAL_SPOTS: DestinationItem[] = [
     longitude: 139.3019,
     address: '東京都羽村市小作台1丁目11-6 NTKビル1F',
     url: 'https://kappajapan.com/',
-    poster: '👨 お父さん',
+    poster: '👨 かずや',
     desire: 5,
     memo: '青梅線小作駅すぐ！名物トマトラーメン＆チーズご飯のシメが最高',
     status: '行きたい',
@@ -49,7 +49,7 @@ const INITIAL_SPOTS: DestinationItem[] = [
     longitude: 139.3005,
     address: '東京都青梅市今寺4丁目5-24',
     url: 'https://share.google/mzPtWbHNbOhSgIzVz',
-    poster: '👨 お父さん',
+    poster: '👨 かずや',
     desire: 5,
     memo: 'エビ出汁の効いた名物担々麺！ロースカツトッピングが最高',
     status: '行きたい',
@@ -62,7 +62,7 @@ const INITIAL_SPOTS: DestinationItem[] = [
     latitude: 35.795,
     longitude: 139.26,
     address: '青梅市',
-    poster: '👦 ゆうた',
+    poster: '👦 れん',
     desire: 4,
     memo: 'イルカショーやペンギンが見たい！',
     status: '行きたい',
@@ -75,7 +75,7 @@ const INITIAL_SPOTS: DestinationItem[] = [
     latitude: 35.78,
     longitude: 139.31,
     address: '青梅駅前',
-    poster: '👧 あい',
+    poster: '👧 あやみ',
     desire: 5,
     memo: 'ふわふわの焼きたてスフレパンケーキ🥞',
     status: '行きたい',
@@ -235,7 +235,7 @@ export default function App() {
   const [isLoadingAlbum, setIsLoadingAlbum] = useState<boolean>(false);
 
   // Form State
-  const [formPoster, setFormPoster] = useState('👨 お父さん');
+  const [formPoster, setFormPoster] = useState('👨 かずや');
   const [formCategory, setFormCategory] = useState<'場所' | '店' | 'やりたいこと'>('店');
   const [formName, setFormName] = useState('');
   const [formUrl, setFormUrl] = useState('');
@@ -904,7 +904,7 @@ export default function App() {
                     誰のやりたいこと？ <span className="text-[#e0523d] text-[9px]">※必須</span>
                   </label>
                   <div className="grid grid-cols-4 gap-1.5">
-                    {['👨 お父さん', '👩 お母さん', '👦 ゆうた', '👧 あい'].map((p) => (
+                    {['👨 かずや', '👩 ひとみ', '👦 れん', '👧 あやみ'].map((p) => (
                       <button
                         type="button"
                         key={p}
