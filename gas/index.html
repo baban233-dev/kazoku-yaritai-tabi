@@ -474,9 +474,11 @@
         if (item.latitude && item.longitude) {
           const isVisited = (item.status === '行った');
           const markerOpts = ensureIcons() ? { icon: isVisited ? visitedIcon : breadIcon } : {};
-          // ピンの吹き出しは名前だけ（メモ・感想はカードと詳細で見る）
+          // ピンの吹き出しは「名前＋メモ」。行った場所は感想を出す（無ければメモ）
+          const pinText = isVisited ? (item.visitedMemo || item.memo || '') : (item.memo || '');
           const m = L.marker([item.latitude, item.longitude], markerOpts).addTo(map).bindPopup(
-            '<div style="font-weight:900;color:#4a2810;">' + item.name + '</div>'
+            '<div style="font-weight:900;color:#4a2810;">' + item.name + '</div>' +
+            (pinText ? '<div style="font-size:11px;color:' + (isVisited ? '#2e7d32' : '#4a2810') + ';font-weight:700;margin-top:3px;white-space:pre-wrap;">' + pinText + '</div>' : '')
           );
           markers[item.id] = m;
         }

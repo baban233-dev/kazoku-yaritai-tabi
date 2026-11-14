@@ -316,6 +316,7 @@ export default function App() {
         popupContent.style.minWidth = '160px';
         popupContent.innerHTML = `
           <div style="font-weight:900; color:#4a2810; margin-bottom:2px;">${item.name}</div>
+          ${(isVisited ? (item.visitedMemo || item.memo) : item.memo) ? `<div style="font-size:11px; color:${isVisited ? '#2e7d32' : '#4a2810'}; font-weight:700; margin-top:3px; white-space:pre-wrap;">${isVisited ? (item.visitedMemo || item.memo) : item.memo}</div>` : ''}
         `;
 
         const btnRow = document.createElement('div');
