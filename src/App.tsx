@@ -321,6 +321,7 @@ export default function App() {
           </div>
           ${item.photoUrl ? `<div style="margin-top:4px; margin-bottom:4px; border-radius:6px; overflow:hidden; width:100%; height:64px; border:1.5px solid #7ab877;"><img src="${item.photoUrl}" style="width:100%; height:100%; object-fit:cover;" /></div>` : ''}
           ${item.address ? `<div style="font-size:10px; color:#7a583e; margin-top:2px;">📍 ${item.address}</div>` : ''}
+          ${item.memo ? `<div style="font-size:11px; color:#4a2810; font-weight:700; margin-top:3px; white-space:pre-wrap;">💭 ${item.memo}</div>` : ''}
           ${item.url ? `<div style="font-size:9px; color:#c96e1b; margin-top:2px;">🔗 リンクあり</div>` : ''}
           <div style="font-size:10px; color:#964d1f; font-weight:800; margin-top:2px;">${item.poster}</div>
         `;

@@ -398,6 +398,7 @@ function updateDestination(id, formData) {
   const categoryCol = headers.indexOf('カテゴリ');
   const addressCol = headers.indexOf('住所・最寄り') >= 0 ? headers.indexOf('住所・最寄り') : headers.indexOf('場所・住所');
   const posterCol = headers.indexOf('投稿者');
+  const memoCol = headers.indexOf('メモ');
   const urlCol = headers.indexOf('紹介URL');
   const latCol = headers.indexOf('緯度');
   const lngCol = headers.indexOf('経度');
@@ -409,6 +410,7 @@ function updateDestination(id, formData) {
       if (categoryCol >= 0 && formData.category) sheet.getRange(r + 1, categoryCol + 1).setValue(formData.category);
       if (addressCol >= 0) sheet.getRange(r + 1, addressCol + 1).setValue(formData.address || '');
       if (posterCol >= 0 && formData.poster) sheet.getRange(r + 1, posterCol + 1).setValue(formData.poster);
+      if (memoCol >= 0 && formData.memo !== undefined) sheet.getRange(r + 1, memoCol + 1).setValue(formData.memo || '');
       if (urlCol >= 0) sheet.getRange(r + 1, urlCol + 1).setValue(formData.url || '');
 
       let lat = null, lng = null;
