@@ -78,9 +78,21 @@ function authorizeUrlFetch() {
 /**
  * 共有URL（share.google や Googleマップ短縮URL等）を解決して店名と住所を取得する
  */
+/**
+ * 貼り付けテキストからURLだけを取り出す。
+ * Google共有のコピーは「店名 https://share.google/...」のように説明文が前に付くため、
+ * そのままだと解決も保存もできない。URLが無ければ元の文字列（trim済み）を返す。
+ */
+function extractUrl_(text) {
+  const s = String(text || '');
+  const m = s.match(/https?:\/\/[^\s"'<>]+/);
+  if (!m) return s.trim();
+  return m[0].replace(/[。、）)」』】]+$/, '');
+}
+
 function resolveShareUrl(rawUrl) {
   try {
-    let url = String(rawUrl || '').trim();
+    let url = extractUrl_(rawUrl);
     if (!url) return { success: false, error: 'URLがありません' };
 
     // 既知の地元スポット辞書（担々麺杉山、らーめんニューカッパ等）
@@ -235,6 +247,7 @@ function geocodeAddress_(address, name) {
  */
 function getAlbumCover(albumUrl) {
   try {
+    albumUrl = extractUrl_(albumUrl);
     if (!albumUrl) return { success: false };
     const res = UrlFetchApp.fetch(albumUrl, { muteHttpExceptions: true });
     const content = res.getContentText();
@@ -346,7 +359,7 @@ function submitDestination(formData) {
   set(['行きたい度'], formData.desire || 3);
   set(['メモ'], formData.memo || '');
   set(['状態'], '行きたい');
-  set(['紹介URL'], formData.url || '');
+  set(['紹介URL'], extractUrl_(formData.url));
   set(['登録日・更新日', '登録日時', '登録日'], nowStr);
   set(['更新日'], nowStr);
   sheet.appendRow(row);
@@ -376,7 +389,7 @@ function markAsVisited(id, payload) {
       if (statusCol >= 0) sheet.getRange(r + 1, statusCol + 1).setValue('行った');
       if (visitedDateCol >= 0) sheet.getRange(r + 1, visitedDateCol + 1).setValue(payload.visitedDate || '');
       if (visitedMemoCol >= 0) sheet.getRange(r + 1, visitedMemoCol + 1).setValue(payload.visitedMemo || '');
-      if (photoCol >= 0) sheet.getRange(r + 1, photoCol + 1).setValue(payload.albumUrl || '');
+      if (photoCol >= 0) sheet.getRange(r + 1, photoCol + 1).setValue(extractUrl_(payload.albumUrl));
       return { success: true };
     }
   }
@@ -411,7 +424,7 @@ function updateDestination(id, formData) {
       if (addressCol >= 0) sheet.getRange(r + 1, addressCol + 1).setValue(formData.address || '');
       if (posterCol >= 0 && formData.poster) sheet.getRange(r + 1, posterCol + 1).setValue(formData.poster);
       if (memoCol >= 0 && formData.memo !== undefined) sheet.getRange(r + 1, memoCol + 1).setValue(formData.memo || '');
-      if (urlCol >= 0) sheet.getRange(r + 1, urlCol + 1).setValue(formData.url || '');
+      if (urlCol >= 0) sheet.getRange(r + 1, urlCol + 1).setValue(extractUrl_(formData.url));
 
       let lat = null, lng = null;
       if (formData.latitude && formData.longitude) {

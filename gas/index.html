@@ -274,7 +274,7 @@
             <input type="date" id="visitedDate" required class="w-full border-2 border-[#c8e6c9] rounded-xl px-3 py-2 text-xs bg-white text-[#2e7d32] font-black">
           </div>
           <div>
-            <label class="block text-[11px] font-black text-[#1b5e20] mb-1">🍓 思い出・ひとことメモ</label>
+            <label class="block text-[11px] font-black text-[#1b5e20] mb-1">🍓 感想・ひとことメモ</label>
             <textarea id="visitedMemo" rows="3" placeholder="名物の料理がとても美味しかった！" class="w-full border-2 border-[#c8e6c9] rounded-xl px-3 py-2 text-xs bg-white resize-none"></textarea>
           </div>
           <div class="bg-[#f1f8e9] p-2.5 rounded-2xl border-2 border-[#c5e1a5]">
@@ -479,7 +479,8 @@
             '<div style="color:' + (isVisited ? '#2e7d32' : '#d78839') + ';font-weight:800;font-size:11px;">' + (isVisited ? '行った！🍓' : '行きたい！🍞') + '</div>' +
             (item.photoUrl ? '<div style="margin:4px 0;width:100%;height:60px;overflow:hidden;border-radius:6px;border:1px solid #7ab877;"><img src="' + item.photoUrl + '" style="width:100%;height:100%;object-fit:cover;"></div>' : '') +
             (item.address ? '<div style="font-size:10px;color:#7a583e;margin-top:2px;">📍 ' + item.address + '</div>' : '') +
-            (item.memo ? '<div style="font-size:11px;color:#4a2810;font-weight:700;margin-top:3px;white-space:pre-wrap;">💭 ' + item.memo + '</div>' : '')
+            (item.memo ? '<div style="font-size:11px;color:#4a2810;font-weight:700;margin-top:3px;white-space:pre-wrap;">💭 ' + item.memo + '</div>' : '') +
+            (item.visitedMemo ? '<div style="font-size:11px;color:#2e7d32;font-weight:700;margin-top:3px;white-space:pre-wrap;">🍓 ' + item.visitedMemo + '</div>' : '')
           );
           markers[item.id] = m;
         }
@@ -636,7 +637,7 @@
     let editResolvedLng = null;
 
     function onEditUrlChange() {
-      const url = document.getElementById('editUrl').value.trim();
+      const url = cleanUrlField('editUrl');
       if (!url) { showToast('URLを入力してね'); return; }
       const btn = document.getElementById('editResolveBtn');
       btn.disabled = true;
@@ -711,7 +712,7 @@
         name: name,
         category: document.getElementById('editCategory').value,
         address: document.getElementById('editAddress').value.trim(),
-        url: document.getElementById('editUrl').value.trim(),
+        url: cleanUrlField('editUrl'),
         poster: editSelectedPoster,
         memo: document.getElementById('editMemo').value.trim(),
         latitude: editResolvedLat,
@@ -816,7 +817,7 @@
     }
 
     function fetchAlbumCover() {
-      const url = document.getElementById('visitedAlbumUrl').value.trim();
+      const url = cleanUrlField('visitedAlbumUrl');
       if (!url) { showToast('アルバムURLを入力してね'); return; }
       const btn = document.getElementById('btnFetchAlbum');
       btn.disabled = true;
@@ -856,7 +857,7 @@
 
       const visitedDate = document.getElementById('visitedDate').value;
       const visitedMemo = document.getElementById('visitedMemo').value.trim();
-      const albumUrl = document.getElementById('visitedAlbumUrl').value.trim();
+      const albumUrl = cleanUrlField('visitedAlbumUrl');
 
       const payload = {
         visitedDate: visitedDate,
@@ -886,8 +887,20 @@
       }
     }
 
+    // 貼り付けテキスト（「店名 https://...」形式）からURLだけを取り出し、欄へ書き戻す
+    function extractUrlFromText(text) {
+      const m = String(text || '').match(/https?:\/\/[^\s"'<>]+/);
+      return m ? m[0].replace(/[。、）)」』】]+$/, '') : String(text || '').trim();
+    }
+    function cleanUrlField(id) {
+      const el = document.getElementById(id);
+      const cleaned = extractUrlFromText(el.value);
+      if (cleaned && cleaned !== el.value.trim()) el.value = cleaned;
+      return el.value.trim();
+    }
+
     function onUrlChange() {
-      const url = document.getElementById('formUrl').value.trim();
+      const url = cleanUrlField('formUrl');
       if (!url) { showToast('URLを入力してね'); return; }
       const btn = document.getElementById('resolveBtn');
       btn.disabled = true;
@@ -942,7 +955,7 @@
       e.preventDefault();
       const name = document.getElementById('formName').value.trim();
       const address = document.getElementById('formAddress').value.trim();
-      const url = document.getElementById('formUrl').value.trim();
+      const url = cleanUrlField('formUrl');
       const category = document.getElementById('formCategory').value;
       const memo = document.getElementById('formMemo').value.trim();
 
